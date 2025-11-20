@@ -1,23 +1,26 @@
 
 import React from 'react';
-import { LayoutDashboard, Kanban, FileText, MessageSquare, Settings, LogOut, Sparkles, Command, User, CheckSquare } from 'lucide-react';
-import { ViewState } from '../types';
+import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare } from 'lucide-react';
+import { ViewState, UserRole } from '../types';
 
 interface SidebarProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
+  userRole: UserRole;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'pipeline', label: 'Pipeline', icon: Kanban },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { id: 'proposals', label: 'Proposals', icon: FileText },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole }) => {
+  
+  const allMenuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
+    { id: 'pipeline', label: 'Pipeline', icon: Kanban, roles: ['Admin', 'Manager', 'Sales'] },
+    { id: 'clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
+    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, roles: ['Admin', 'Manager', 'Sales'] },
+    { id: 'settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
   ];
+
+  const visibleItems = allMenuItems.filter(item => item.roles.includes(userRole));
 
   return (
     <div className="hidden md:flex flex-col fixed left-6 top-6 bottom-6 w-20 bg-[#1c1c1c] rounded-[40px] items-center py-8 z-50 shadow-2xl shadow-slate-900/20">
@@ -28,7 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView }) => {
 
       {/* Nav Items */}
       <nav className="flex-1 flex flex-col space-y-4 w-full px-3">
-        {menuItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = currentView === item.id;
           const Icon = item.icon;
           return (

@@ -1,9 +1,16 @@
 
-import React, { useState } from 'react';
-import { Sparkles, Send, Download, FileText, Loader2, Check, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Send, Download, FileText, Loader2, Check, ChevronRight, ChevronLeft, User, Building2 } from 'lucide-react';
 import { generateProposal } from '../services/geminiService';
+import { Lead } from '../types';
 
-const ProposalBuilder: React.FC = () => {
+interface ProposalBuilderProps {
+    initialData?: Lead | null;
+    mode?: 'create' | 'edit';
+    onBack: () => void;
+}
+
+const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = 'create', onBack }) => {
   const [clientName, setClientName] = useState('');
   const [value, setValue] = useState<string>('');
   const [services, setServices] = useState('');
@@ -11,6 +18,18 @@ const ProposalBuilder: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    if (initialData) {
+        setClientName(initialData.name);
+        setValue(initialData.value.toString());
+        // If editing, pre-fill notes. If creating new, maybe leave empty or use notes as context?
+        // Using notes as base context for both for now, user can edit.
+        if (initialData.notes) {
+            setServices(initialData.notes); 
+        }
+    }
+  }, [initialData]);
 
   const handleGenerate = async () => {
     if (!clientName || !value || !services) return;
@@ -24,9 +43,23 @@ const ProposalBuilder: React.FC = () => {
 
   return (
     <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
-      <div className="mb-8 shrink-0">
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Create Proposal</h2>
-        <p className="text-slate-500 font-medium mt-1 text-sm">AI-powered document generation suite.</p>
+      <div className="mb-8 shrink-0 flex items-center gap-4">
+        <button 
+            onClick={onBack}
+            className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:shadow-sm transition"
+        >
+            <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                {initialData 
+                    ? (mode === 'edit' ? `Edit Proposal for ${initialData.company}` : `New Proposal for ${initialData.company}`) 
+                    : 'Create Proposal'}
+            </h2>
+            <p className="text-slate-500 font-medium mt-1 text-sm">
+                {mode === 'edit' ? 'Refine and update existing document terms.' : 'Draft a new service agreement or upsell proposal.'}
+            </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 overflow-hidden">
@@ -43,14 +76,17 @@ const ProposalBuilder: React.FC = () => {
             
             <div className="space-y-6">
                 <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Client Name</label>
-                    <input 
-                        type="text" 
-                        className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
-                        placeholder="e.g. Safaricom PLC"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                    />
+                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Client Contact</label>
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            className="w-full p-4 pl-12 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
+                            placeholder="e.g. Safaricom PLC"
+                            value={clientName}
+                            onChange={(e) => setClientName(e.target.value)}
+                        />
+                        <User className="w-4 h-4 absolute left-4 top-4 text-slate-400" />
+                    </div>
                 </div>
 
                 <div className="space-y-2">
@@ -65,10 +101,10 @@ const ProposalBuilder: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Deliverables</label>
+                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Context & Deliverables</label>
                     <textarea 
                         className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 min-h-[140px] resize-none placeholder:text-slate-400 leading-relaxed text-sm shadow-sm"
-                        placeholder="List the products and services..."
+                        placeholder="List the products, services, and key deal points..."
                         value={services}
                         onChange={(e) => setServices(e.target.value)}
                     ></textarea>
@@ -103,12 +139,12 @@ const ProposalBuilder: React.FC = () => {
                     {isGenerating ? (
                         <>
                             <Loader2 className="w-5 h-5 animate-spin" />
-                            Generating...
+                            Thinking...
                         </>
                     ) : (
                         <>
                             <Sparkles className="w-5 h-5" />
-                            Generate Proposal
+                            {mode === 'edit' ? 'Update Proposal' : 'Generate Proposal'}
                         </>
                     )}
                 </button>

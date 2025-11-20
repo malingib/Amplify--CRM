@@ -1,4 +1,6 @@
 
+export type UserRole = 'Admin' | 'Manager' | 'Sales' | 'Viewer';
+
 export enum DealStage {
   INTAKE = 'Intake',
   QUALIFIED = 'Qualified',
@@ -16,6 +18,25 @@ export interface Lead {
   lastContact: string; // ISO date
   probability: number;
   avatar: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  proposalStatus?: 'None' | 'Draft' | 'Sent' | 'Accepted';
+  qualificationScore?: number;
+  qualificationSummary?: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  status: 'Active' | 'Inactive' | 'Pending';
+  lastOrder: string;
+  totalRevenue: number;
+  avatar: string;
+  industry: string;
 }
 
 export interface Message {
@@ -37,7 +58,7 @@ export interface ChatSession {
 export interface TeamMember {
   id: string;
   name: string;
-  role: 'Admin' | 'Manager' | 'Sales' | 'Viewer';
+  role: UserRole;
   email: string;
   avatar: string;
   status: 'Active' | 'Offline' | 'Away';
@@ -53,4 +74,4 @@ export interface Task {
   status: 'To Do' | 'In Progress' | 'Done';
 }
 
-export type ViewState = 'dashboard' | 'pipeline' | 'proposals' | 'whatsapp' | 'tasks' | 'settings' | 'profile';
+export type ViewState = 'dashboard' | 'pipeline' | 'proposals' | 'whatsapp' | 'tasks' | 'settings' | 'profile' | 'clients';

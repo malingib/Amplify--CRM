@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.API_KEY || 'dummy_key'; 
@@ -91,4 +92,68 @@ export const analyzePipeline = async (leadsCount: number, revenue: number): Prom
   } catch (error) {
     return "AI Insights currently unavailable.";
   }
-}
+};
+
+export const qualifyLead = async (name: string, company: string, notes: string, value: number) => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+      Act as a Senior Sales Director. Analyze this lead based on BANT (Budget, Authority, Need, Timeline).
+      
+      Lead: ${name} from ${company}
+      Deal Value: KES ${value}
+      Notes: ${notes}
+
+      Return a JSON object with NO markdown formatting:
+      {
+        "score": number (0-100),
+        "summary": "One sentence explanation of the score."
+      }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+
+    const text = response.text || "{}";
+    // Clean cleanup code block markers if present
+    const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("Qualification error", error);
+    return { score: 50, summary: "AI analysis failed, manual review required." };
+  }
+};
+
+export const generateLeads = async (industry: string, location: string) => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+      Generate 3 fictional but realistic B2B leads for a CRM system in Kenya.
+      Target Industry: ${industry}
+      Target Location: ${location}
+      
+      Return a JSON array with NO markdown formatting. Each object should look like:
+      {
+        "name": "Full Name",
+        "company": "Company Name Ltd",
+        "email": "email@company.co.ke",
+        "value": number (between 50000 and 500000),
+        "notes": "Brief context on what they need"
+      }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+
+    const text = response.text || "[]";
+    const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("Lead Gen error", error);
+    return [];
+  }
+};

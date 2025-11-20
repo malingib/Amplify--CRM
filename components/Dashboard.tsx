@@ -1,18 +1,25 @@
 
 import React from 'react';
-import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight } from 'lucide-react';
+import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock } from 'lucide-react';
+import { UserRole } from '../types';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+    userRole: UserRole;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
+  const showFinancials = ['Admin', 'Manager'].includes(userRole);
+
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 pb-24">
       {/* Top Navigation / Breadcrumbs */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
         <div className="flex items-center gap-6 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-            <span className="text-2xl font-bold text-slate-900 whitespace-nowrap tracking-tight">Customer Information</span>
+            <span className="text-2xl font-bold text-slate-900 whitespace-nowrap tracking-tight">Dashboard</span>
             <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden md:block"></div>
             <div className="flex gap-2">
-                {['Book Summaries', 'Founders', 'Finance', 'Contacts', 'Growth'].map((item, i) => (
-                    <button key={item} className={`px-4 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap border ${i === 3 ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}>
+                {['Overview', 'Sales Performance', 'Team Activity', showFinancials ? 'Revenue' : null].filter(Boolean).map((item, i) => (
+                    <button key={item} className={`px-4 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap border ${i === 0 ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-slate-900 hover:shadow-sm'}`}>
                         {item}
                     </button>
                 ))}
@@ -22,16 +29,30 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5">
-         <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
-            <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
-                <TrendingUp className="w-5 h-5" />
+         
+         {/* Financial Card - Conditional */}
+         {showFinancials ? (
+            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
+                <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
+                    <TrendingUp className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Revenue</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">$1.98M</p>
+                </div>
+                <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100 shrink-0">+11%</span>
             </div>
-            <div className="flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Revenue</p>
-                <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">$1.98M</p>
+         ) : (
+            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-0.5">
+                 <div className="bg-blue-50 p-3 rounded-xl text-blue-600 shrink-0 border border-blue-100">
+                    <TrendingUp className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">My Pipeline Value</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">$245k</p>
+                </div>
             </div>
-            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100 shrink-0">+11%</span>
-         </div>
+         )}
 
          <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
             <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
@@ -49,10 +70,10 @@ const Dashboard: React.FC = () => {
                 <Calendar className="w-5 h-5" />
             </div>
             <div className="flex-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">New Tasks</p>
-                <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">+31</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">My Tasks</p>
+                <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">12</p>
             </div>
-            <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200 shrink-0">+6</span>
+            <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200 shrink-0">+4</span>
          </div>
       </div>
 
@@ -65,8 +86,8 @@ const Dashboard: React.FC = () => {
             {/* Interaction History Header */}
             <div className="flex justify-between items-end px-1">
                 <div>
-                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Interaction History</h3>
-                    <p className="text-slate-500 font-medium mt-1 text-sm">Recent deal movements and key milestones.</p>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Recent Activity</h3>
+                    <p className="text-slate-500 font-medium mt-1 text-sm">Latest deal movements and key milestones.</p>
                 </div>
                 <div className="flex gap-2">
                     <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition hover:border-slate-300 shadow-sm">
@@ -120,25 +141,35 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Deep Black Card */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm">
-                    <div className="absolute top-6 right-6 z-20">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-transform group-hover:rotate-45 shadow-[0_0_30px_rgba(255,255,255,0.15)]">
-                            <ArrowUpRight className="w-6 h-6 text-black" />
+                {/* Deep Black Card - Show only for Admin/Manager/Sales, else show placeholder */}
+                {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm">
+                        <div className="absolute top-6 right-6 z-20">
+                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-transform group-hover:rotate-45 shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+                                <ArrowUpRight className="w-6 h-6 text-black" />
+                            </div>
+                        </div>
+                        <div className="mt-auto mb-6 space-y-1 relative z-10">
+                            <div className="text-[10px] font-bold text-slate-400 mb-4 border border-slate-700 px-2 py-1 rounded-md w-fit uppercase tracking-wider bg-slate-800/50">Oct 12 • Closed</div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Absolute</p>
+                            <p className="text-3xl font-bold tracking-tight text-white leading-tight">Success Deal</p>
+                        </div>
+                        <div className="flex items-end justify-between relative z-10">
+                             <span className="text-4xl font-bold tracking-tighter text-white">$2.1k</span>
+                             <div className="flex -space-x-3 pl-4 pb-1">
+                                {[6,7,8].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-slate-900 object-cover shadow-sm" />)}
+                             </div>
                         </div>
                     </div>
-                    <div className="mt-auto mb-6 space-y-1 relative z-10">
-                        <div className="text-[10px] font-bold text-slate-400 mb-4 border border-slate-700 px-2 py-1 rounded-md w-fit uppercase tracking-wider bg-slate-800/50">Oct 12 • Closed</div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Absolute</p>
-                        <p className="text-3xl font-bold tracking-tight text-white leading-tight">Success Deal</p>
+                ) : (
+                    <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col items-center justify-center text-center border border-slate-200/60 min-h-[280px]">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                            <Lock className="w-6 h-6 text-slate-300" />
+                        </div>
+                        <h4 className="font-bold text-slate-900">Access Restricted</h4>
+                        <p className="text-xs text-slate-500 mt-1 max-w-[150px]">Deal details are limited to sales team members.</p>
                     </div>
-                    <div className="flex items-end justify-between relative z-10">
-                         <span className="text-4xl font-bold tracking-tighter text-white">$2.1k</span>
-                         <div className="flex -space-x-3 pl-4 pb-1">
-                            {[6,7,8].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-slate-900 object-cover shadow-sm" />)}
-                         </div>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Second Row of Content */}
@@ -181,7 +212,9 @@ const Dashboard: React.FC = () => {
                     
                     <div className="relative z-10 flex-1 flex flex-col justify-between">
                          <div className="mb-8">
-                             <h2 className="text-5xl font-bold text-slate-900 mb-2 tracking-tight">$350k</h2>
+                             <h2 className="text-5xl font-bold text-slate-900 mb-2 tracking-tight">
+                                {showFinancials ? '$350k' : '12 Deals'}
+                             </h2>
                              <p className="text-slate-600 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                                 <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full ring-4 ring-emerald-100"></span>
                                 Total in Pipeline
@@ -191,11 +224,15 @@ const Dashboard: React.FC = () => {
                          <div className="grid grid-cols-2 gap-4">
                              <div className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl flex flex-col justify-center shadow-sm border border-white/60 hover:bg-white hover:scale-105 transition duration-300">
                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Qualification</span>
-                                 <span className="text-2xl font-bold text-slate-900 tracking-tight">$92k</span>
+                                 <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                                    {showFinancials ? '$92k' : '4'}
+                                 </span>
                              </div>
                              <div className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl flex flex-col justify-center shadow-sm border border-white/60 hover:bg-white hover:scale-105 transition duration-300">
                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Negotiation</span>
-                                 <span className="text-2xl font-bold text-slate-900 tracking-tight">$67k</span>
+                                 <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                                     {showFinancials ? '$67k' : '3'}
+                                 </span>
                              </div>
                          </div>
                     </div>

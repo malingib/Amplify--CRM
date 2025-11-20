@@ -8,30 +8,52 @@ import WhatsAppChat from './components/WhatsAppChat';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Tasks from './components/Tasks';
+import Clients from './components/Clients';
 import AICommandCenter from './components/AICommandCenter';
-import { ViewState } from './types';
-import { Bell, Search, Menu, User } from 'lucide-react';
+import { ViewState, Lead, UserRole } from './types';
+import { Bell, Search, Menu, User, Shield } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('Admin');
+  
+  // State to hold the lead data when navigating from Pipeline -> Proposal
+  const [proposalLead, setProposalLead] = useState<Lead | null>(null);
+  const [proposalMode, setProposalMode] = useState<'create' | 'edit'>('create');
+
+  const handleCreateProposal = (lead: Lead, mode: 'create' | 'edit' = 'create') => {
+    setProposalLead(lead);
+    setProposalMode(mode);
+    setCurrentView('proposals');
+  };
 
   const renderContent = () => {
     switch (currentView) {
-      case 'dashboard': return <Dashboard />;
-      case 'pipeline': return <Pipeline />;
+      case 'dashboard': return <Dashboard userRole={userRole} />;
+      case 'pipeline': return <Pipeline onCreateProposal={handleCreateProposal} />;
       case 'tasks': return <Tasks />;
-      case 'proposals': return <ProposalBuilder />;
+      case 'clients': return <Clients />;
+      case 'proposals': return (
+        <ProposalBuilder 
+            initialData={proposalLead} 
+            mode={proposalMode}
+            onBack={() => {
+                setProposalLead(null);
+                setCurrentView('pipeline');
+            }} 
+        />
+      );
       case 'whatsapp': return <WhatsAppChat />;
-      case 'profile': return <Profile />;
+      case 'profile': return <Profile userRole={userRole} onRoleChange={setUserRole} />;
       case 'settings': return <Settings />;
-      default: return <Dashboard />;
+      default: return <Dashboard userRole={userRole} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-[#f3f5f8] font-sans overflow-hidden text-slate-900 relative selection:bg-slate-900 selection:text-white">
-      <Sidebar currentView={currentView} onChangeView={setCurrentView} />
+      <Sidebar currentView={currentView} onChangeView={setCurrentView} userRole={userRole} />
       
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -40,12 +62,18 @@ const App: React.FC = () => {
                  <div className="font-bold mb-8 text-2xl text-slate-900 tracking-tight">Menu</div>
                  <div className="flex flex-col gap-2">
                     <button onClick={() => {setCurrentView('dashboard'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Dashboard</button>
-                    <button onClick={() => {setCurrentView('pipeline'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Pipeline</button>
+                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
+                      <button onClick={() => {setCurrentView('pipeline'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Pipeline</button>
+                    )}
+                    <button onClick={() => {setCurrentView('clients'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Clients</button>
                     <button onClick={() => {setCurrentView('tasks'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Tasks</button>
-                    <button onClick={() => {setCurrentView('proposals'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Proposals</button>
-                    <button onClick={() => {setCurrentView('whatsapp'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">WhatsApp</button>
+                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
+                      <button onClick={() => {setCurrentView('whatsapp'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">WhatsApp</button>
+                    )}
                     <button onClick={() => {setCurrentView('profile'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Profile</button>
-                    <button onClick={() => {setCurrentView('settings'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Settings</button>
+                    {userRole === 'Admin' && (
+                      <button onClick={() => {setCurrentView('settings'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Settings</button>
+                    )}
                  </div>
              </div>
         </div>
@@ -66,8 +94,10 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-8">
-                 <button className="text-[10px] font-bold text-slate-500 hover:text-slate-900 transition hidden lg:block uppercase tracking-widest">Explore</button>
-                 <button className="text-[10px] font-bold text-slate-500 hover:text-slate-900 transition hidden lg:block uppercase tracking-widest">Find Talent</button>
+                 <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200">
+                    <Shield className="w-3 h-3 text-slate-500" />
+                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{userRole} View</span>
+                 </div>
                  
                 <button className="relative p-3 text-slate-400 hover:bg-white hover:text-slate-700 hover:shadow-md rounded-xl transition border border-transparent hover:border-slate-100">
                     <Bell className="w-5 h-5" />

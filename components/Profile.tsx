@@ -1,8 +1,14 @@
 
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, MoreHorizontal, ArrowUpRight, Sparkles, LogOut, Shield, Bell, CreditCard, Settings as SettingsIcon, Save, X, Edit2 } from 'lucide-react';
+import { UserRole } from '../types';
 
-const Profile: React.FC = () => {
+interface ProfileProps {
+    userRole?: UserRole;
+    onRoleChange?: (role: UserRole) => void;
+}
+
+const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [profileData, setProfileData] = useState({
         name: 'Eva Robinson',
@@ -47,6 +53,36 @@ const Profile: React.FC = () => {
                 </button>
             )}
         </div>
+
+        {/* Role Switcher for Demo */}
+        {onRoleChange && (
+            <div className="bg-blue-50 border border-blue-100 rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                        <Shield className="w-6 h-6" />
+                    </div>
+                    <div>
+                         <h3 className="font-bold text-slate-900 text-sm">Simulate User Role</h3>
+                         <p className="text-xs text-slate-500 mt-0.5">Switch roles to test the dashboard permissions.</p>
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    {(['Admin', 'Manager', 'Sales', 'Viewer'] as UserRole[]).map(role => (
+                        <button
+                            key={role}
+                            onClick={() => onRoleChange(role)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                                userRole === role 
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' 
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                            }`}
+                        >
+                            {role}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Main Profile Card */}
@@ -95,8 +131,8 @@ const Profile: React.FC = () => {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between group">
                                 <div>
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Role</p>
-                                    <p className="font-bold text-slate-900 text-sm">Administrator</p>
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Current Role</p>
+                                    <p className="font-bold text-slate-900 text-sm">{userRole}</p>
                                 </div>
                             </div>
                              <div className="h-px bg-slate-200 w-full"></div>

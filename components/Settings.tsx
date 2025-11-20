@@ -1,6 +1,11 @@
 
 import React, { useState } from 'react';
-import { Bell, Lock, User, Globe, Moon, Shield, Users, Check, Search, Filter, MoreHorizontal, Plus, X, ToggleRight, ToggleLeft, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { 
+    Bell, Lock, User, Globe, Moon, Shield, Users, Check, Search, Filter, 
+    MoreHorizontal, Plus, X, ToggleRight, ToggleLeft, Save, AlertCircle, 
+    CheckCircle2, Layout, Zap, FileText, CreditCard, Smartphone, Mail, 
+    MessageSquare, Building2 
+} from 'lucide-react';
 import { TeamMember } from '../types';
 
 const initialTeam: TeamMember[] = [
@@ -11,7 +16,7 @@ const initialTeam: TeamMember[] = [
 ];
 
 const Settings: React.FC = () => {
-    const [activeTab, setActiveTab] = useState('team');
+    const [activeTab, setActiveTab] = useState('workspace');
     const [team, setTeam] = useState<TeamMember[]>(initialTeam);
     const [showInviteModal, setShowInviteModal] = useState(false);
     
@@ -31,11 +36,11 @@ const Settings: React.FC = () => {
     };
 
     const tabs = [
-        { id: 'general', label: 'General', icon: User },
-        { id: 'team', label: 'Team & Roles', icon: Users },
-        { id: 'security', label: 'Security', icon: Lock },
-        { id: 'notifications', label: 'Notifications', icon: Bell },
-        { id: 'billing', label: 'Billing', icon: Globe },
+        { id: 'workspace', label: 'Workspace', icon: Layout },
+        { id: 'team', label: 'Team Access', icon: Users },
+        { id: 'integrations', label: 'Integrations', icon: Zap },
+        { id: 'templates', label: 'Templates', icon: FileText },
+        { id: 'billing', label: 'Billing', icon: CreditCard },
     ];
 
     return (
@@ -43,14 +48,14 @@ const Settings: React.FC = () => {
              <div className="mb-8 shrink-0 flex justify-between items-end">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Settings</h2>
-                    <p className="text-slate-500 font-medium mt-1 text-sm">Manage workspace, team, and preferences.</p>
+                    <p className="text-slate-500 font-medium mt-1 text-sm">Manage platform configuration and preferences.</p>
                 </div>
             </div>
 
             <div className="flex-1 bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden flex flex-col lg:flex-row ring-4 ring-slate-50">
                 {/* Sidebar Navigation */}
                 <div className="w-full lg:w-64 bg-slate-50/80 border-r border-slate-100 p-6 flex flex-col gap-2 overflow-y-auto backdrop-blur-sm">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-4">Configuration</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-4">System</div>
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -75,7 +80,7 @@ const Settings: React.FC = () => {
                              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-md shadow-blue-600/20 group-hover:scale-110 transition-transform">ER</div>
                              <div>
                                  <p className="text-xs font-bold text-slate-900">Eva Robinson</p>
-                                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">Admin Workspace</p>
+                                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">Admin</p>
                              </div>
                          </div>
                     </div>
@@ -90,8 +95,8 @@ const Settings: React.FC = () => {
                             {/* Section Header */}
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Team Members</h3>
-                                    <p className="text-slate-500 mt-1 font-medium text-sm">Manage access and assign roles to your team.</p>
+                                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Team Access</h3>
+                                    <p className="text-slate-500 mt-1 font-medium text-sm">Manage user roles and platform permissions.</p>
                                 </div>
                                 <button 
                                     onClick={() => setShowInviteModal(true)}
@@ -111,9 +116,6 @@ const Settings: React.FC = () => {
                                     <div className="flex gap-2">
                                         <button className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm">
                                             <Filter className="w-4 h-4" /> Filter
-                                        </button>
-                                        <button className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-2 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm">
-                                            <Save className="w-4 h-4" /> Export
                                         </button>
                                     </div>
                                 </div>
@@ -239,72 +241,167 @@ const Settings: React.FC = () => {
                         </div>
                     )}
 
-                    {activeTab === 'general' && (
+                    {activeTab === 'workspace' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl space-y-8">
                             <div className="mb-6">
-                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">General Preferences</h3>
-                                <p className="text-slate-500 mt-1 font-medium text-sm">Customize your workspace experience.</p>
+                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Workspace Settings</h3>
+                                <p className="text-slate-500 mt-1 font-medium text-sm">Configure your organization's branding and locale.</p>
                             </div>
 
                             <div className="space-y-6">
-                                <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition duration-300">
-                                    <div className="flex items-center gap-6">
-                                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-lg shadow-slate-200/50 border border-slate-100">
-                                            <Moon className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-lg text-slate-900 tracking-tight">Appearance</p>
-                                            <p className="text-sm text-slate-500 font-semibold mt-1">Switch between light and dark themes</p>
+                                <div className="flex items-center p-6 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm">
+                                    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-md border border-slate-100 mr-6">
+                                        <Building2 className="w-8 h-8 text-slate-300" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-bold text-sm text-slate-900 mb-2">Workspace Logo</p>
+                                        <p className="text-xs text-slate-500 mb-4">Recommended size: 200x200px (PNG or JPG)</p>
+                                        <div className="flex gap-3">
+                                            <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition">Upload New</button>
+                                            <button className="px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-xl transition">Remove</button>
                                         </div>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer group">
-                                        <input type="checkbox" className="sr-only peer" />
-                                        <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-slate-900 transition-colors shadow-inner"></div>
-                                    </label>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Language</label>
-                                        <div className="relative">
-                                            <select className="w-full p-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none transition appearance-none shadow-sm text-sm">
-                                                <option>English (US)</option>
-                                                <option>Kiswahili</option>
-                                                <option>French</option>
-                                            </select>
-                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                                <Globe className="w-5 h-5" />
+                                        <label className="text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Organization Name</label>
+                                        <input type="text" defaultValue="Alabama Machinery & Supply" className="w-full p-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none transition shadow-sm text-sm" />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Default Currency</label>
+                                            <div className="relative">
+                                                <select className="w-full p-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none transition appearance-none shadow-sm text-sm">
+                                                    <option>KES (Kenyan Shilling)</option>
+                                                    <option>USD (US Dollar)</option>
+                                                    <option>EUR (Euro)</option>
+                                                </select>
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                                    <Globe className="w-4 h-4" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Timezone</label>
+                                            <div className="relative">
+                                                <select className="w-full p-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none transition appearance-none shadow-sm text-sm">
+                                                    <option>Nairobi (GMT+3)</option>
+                                                    <option>London (GMT+0)</option>
+                                                    <option>New York (GMT-5)</option>
+                                                </select>
+                                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                                    <Globe className="w-4 h-4" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Timezone</label>
-                                        <div className="relative">
-                                            <select className="w-full p-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none transition appearance-none shadow-sm text-sm">
-                                                <option>Nairobi (GMT+3)</option>
-                                                <option>London (GMT+0)</option>
-                                                <option>New York (GMT-5)</option>
-                                            </select>
-                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                                <Globe className="w-5 h-5" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-end pt-4">
+                                     <button className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 active:scale-95 text-sm">
+                                        Save Changes
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Placeholder for other tabs */}
-                    {['notifications', 'security', 'billing'].includes(activeTab) && (
+                    {activeTab === 'integrations' && (
+                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+                            <div className="mb-6">
+                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Platform Integrations</h3>
+                                <p className="text-slate-500 mt-1 font-medium text-sm">Connect your favorite tools and services.</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* WhatsApp */}
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100">
+                                            <MessageSquare className="w-6 h-6" />
+                                        </div>
+                                        <div className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-200">Connected</div>
+                                    </div>
+                                    <h4 className="font-bold text-slate-900 text-base mb-2">WhatsApp Business</h4>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Sync chats, contacts, and automate replies directly from the dashboard.</p>
+                                    <button className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">Configure</button>
+                                </div>
+
+                                {/* M-Pesa */}
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 border border-green-100">
+                                            <Smartphone className="w-6 h-6" />
+                                        </div>
+                                        <div className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200">Inactive</div>
+                                    </div>
+                                    <h4 className="font-bold text-slate-900 text-base mb-2">M-Pesa Paybill</h4>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Automate payment reconciliation and trigger workflows on receipt.</p>
+                                    <button className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-md shadow-slate-900/10">Connect</button>
+                                </div>
+
+                                {/* Email */}
+                                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100">
+                                            <Mail className="w-6 h-6" />
+                                        </div>
+                                        <div className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200">Inactive</div>
+                                    </div>
+                                    <h4 className="font-bold text-slate-900 text-base mb-2">Gmail / Outlook</h4>
+                                    <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Sync email threads to deal records and contacts automatically.</p>
+                                    <button className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-md shadow-slate-900/10">Connect</button>
+                                </div>
+                            </div>
+                         </div>
+                    )}
+                    
+                     {activeTab === 'templates' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-3xl space-y-8">
+                            <div className="mb-6">
+                                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Templates & AI</h3>
+                                <p className="text-slate-500 mt-1 font-medium text-sm">Manage generated content styles.</p>
+                            </div>
+                            
+                             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-sm">Default Proposal Tone</p>
+                                        <p className="text-xs text-slate-500 mt-1">Set the default voice for AI generated proposals.</p>
+                                    </div>
+                                    <select className="bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl px-3 py-2 outline-none">
+                                        <option>Formal & Professional</option>
+                                        <option>Friendly & Warm</option>
+                                        <option>Direct & Urgent</option>
+                                    </select>
+                                </div>
+                                <div className="h-px bg-slate-100"></div>
+                                 <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="font-bold text-slate-900 text-sm">Auto-Reply Signature</p>
+                                        <p className="text-xs text-slate-500 mt-1">Append this to AI chat suggestions.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Enabled</span>
+                                        <ToggleRight className="w-8 h-8 text-slate-900" />
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+                     )}
+
+                    {/* Placeholder for Billing */}
+                    {activeTab === 'billing' && (
                         <div className="flex flex-col items-center justify-center h-[50vh] animate-in fade-in zoom-in duration-500 text-center">
                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-slate-50/50">
-                                <Lock className="w-8 h-8 text-slate-300" />
+                                <CreditCard className="w-8 h-8 text-slate-300" />
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Section Restricted</h3>
-                            <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium text-sm">These settings are managed by your organization's administrator.</p>
+                            <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Billing Portal</h3>
+                            <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium text-sm">You are currently on the <span className="text-slate-900 font-bold">Pro Plan</span>.</p>
                             <button className="mt-8 px-8 py-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-md shadow-slate-200/40 text-sm">
-                                Contact Support
+                                Manage Subscription
                             </button>
                         </div>
                     )}
