@@ -20,6 +20,13 @@ const Settings: React.FC = () => {
     const [team, setTeam] = useState<TeamMember[]>(initialTeam);
     const [showInviteModal, setShowInviteModal] = useState(false);
     
+    // Integration States
+    const [integrations, setIntegrations] = useState({
+        whatsapp: true,
+        mpesa: false,
+        email: false
+    });
+
     // Mock Permissions State
     const [permissions, setPermissions] = useState({
         Admin: { finance: true, users: true, pipeline: true, settings: true, exports: true },
@@ -33,6 +40,10 @@ const Settings: React.FC = () => {
             ...prev,
             [role]: { ...prev[role], [key]: !prev[role][key as keyof typeof prev[typeof role]] }
         }));
+    };
+
+    const toggleIntegration = (key: keyof typeof integrations) => {
+        setIntegrations(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const tabs = [
@@ -322,11 +333,15 @@ const Settings: React.FC = () => {
                                         <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100">
                                             <MessageSquare className="w-6 h-6" />
                                         </div>
-                                        <div className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-200">Connected</div>
+                                        <div className={`text-[10px] font-bold px-2 py-1 rounded-md border ${integrations.whatsapp ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                            {integrations.whatsapp ? 'Connected' : 'Inactive'}
+                                        </div>
                                     </div>
                                     <h4 className="font-bold text-slate-900 text-base mb-2">WhatsApp Business</h4>
                                     <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Sync chats, contacts, and automate replies directly from the dashboard.</p>
-                                    <button className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition">Configure</button>
+                                    <button onClick={() => toggleIntegration('whatsapp')} className={`w-full py-2.5 rounded-xl font-bold text-xs transition ${integrations.whatsapp ? 'border border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                                        {integrations.whatsapp ? 'Configure' : 'Connect'}
+                                    </button>
                                 </div>
 
                                 {/* M-Pesa */}
@@ -335,11 +350,15 @@ const Settings: React.FC = () => {
                                         <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 border border-green-100">
                                             <Smartphone className="w-6 h-6" />
                                         </div>
-                                        <div className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200">Inactive</div>
+                                        <div className={`text-[10px] font-bold px-2 py-1 rounded-md border ${integrations.mpesa ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                            {integrations.mpesa ? 'Connected' : 'Inactive'}
+                                        </div>
                                     </div>
                                     <h4 className="font-bold text-slate-900 text-base mb-2">M-Pesa Paybill</h4>
                                     <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Automate payment reconciliation and trigger workflows on receipt.</p>
-                                    <button className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-md shadow-slate-900/10">Connect</button>
+                                    <button onClick={() => toggleIntegration('mpesa')} className={`w-full py-2.5 rounded-xl font-bold text-xs transition ${integrations.mpesa ? 'border border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                                        {integrations.mpesa ? 'Configure' : 'Connect'}
+                                    </button>
                                 </div>
 
                                 {/* Email */}
@@ -348,11 +367,15 @@ const Settings: React.FC = () => {
                                         <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100">
                                             <Mail className="w-6 h-6" />
                                         </div>
-                                        <div className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-md border border-slate-200">Inactive</div>
+                                         <div className={`text-[10px] font-bold px-2 py-1 rounded-md border ${integrations.email ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                            {integrations.email ? 'Connected' : 'Inactive'}
+                                        </div>
                                     </div>
                                     <h4 className="font-bold text-slate-900 text-base mb-2">Gmail / Outlook</h4>
                                     <p className="text-xs text-slate-500 font-medium leading-relaxed mb-6">Sync email threads to deal records and contacts automatically.</p>
-                                    <button className="w-full py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-md shadow-slate-900/10">Connect</button>
+                                    <button onClick={() => toggleIntegration('email')} className={`w-full py-2.5 rounded-xl font-bold text-xs transition ${integrations.email ? 'border border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+                                        {integrations.email ? 'Configure' : 'Connect'}
+                                    </button>
                                 </div>
                             </div>
                          </div>

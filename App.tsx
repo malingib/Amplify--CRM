@@ -1,14 +1,17 @@
 
+
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Pipeline from './components/Pipeline';
 import ProposalBuilder from './components/ProposalBuilder';
-import WhatsAppChat from './components/WhatsAppChat';
+import BulkSMS from './components/BulkSMS';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Tasks from './components/Tasks';
 import Clients from './components/Clients';
+import Catalogue from './components/Catalogue';
+import Financials from './components/Financials';
 import AICommandCenter from './components/AICommandCenter';
 import { ViewState, Lead, UserRole } from './types';
 import { Bell, Search, Menu, User, Shield } from 'lucide-react';
@@ -30,10 +33,12 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'dashboard': return <Dashboard userRole={userRole} />;
+      case 'dashboard': return <Dashboard userRole={userRole} onNavigate={setCurrentView} />;
       case 'pipeline': return <Pipeline onCreateProposal={handleCreateProposal} />;
       case 'tasks': return <Tasks />;
       case 'clients': return <Clients />;
+      case 'catalogue': return <Catalogue />;
+      case 'financials': return <Financials />;
       case 'proposals': return (
         <ProposalBuilder 
             initialData={proposalLead} 
@@ -44,10 +49,10 @@ const App: React.FC = () => {
             }} 
         />
       );
-      case 'whatsapp': return <WhatsAppChat />;
+      case 'bulksms': return <BulkSMS />;
       case 'profile': return <Profile userRole={userRole} onRoleChange={setUserRole} />;
       case 'settings': return <Settings />;
-      default: return <Dashboard userRole={userRole} />;
+      default: return <Dashboard userRole={userRole} onNavigate={setCurrentView} />;
     }
   };
 
@@ -66,9 +71,15 @@ const App: React.FC = () => {
                       <button onClick={() => {setCurrentView('pipeline'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Pipeline</button>
                     )}
                     <button onClick={() => {setCurrentView('clients'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Clients</button>
+                    {['Admin', 'Manager'].includes(userRole) && (
+                      <button onClick={() => {setCurrentView('financials'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Financials</button>
+                    )}
+                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
+                      <button onClick={() => {setCurrentView('catalogue'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Catalogue</button>
+                    )}
                     <button onClick={() => {setCurrentView('tasks'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Tasks</button>
                     {['Admin', 'Manager', 'Sales'].includes(userRole) && (
-                      <button onClick={() => {setCurrentView('whatsapp'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">WhatsApp</button>
+                      <button onClick={() => {setCurrentView('bulksms'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Bulk SMS</button>
                     )}
                     <button onClick={() => {setCurrentView('profile'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Profile</button>
                     {userRole === 'Admin' && (

@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'Admin' | 'Manager' | 'Sales' | 'Viewer';
 
 export enum DealStage {
@@ -62,6 +63,7 @@ export interface TeamMember {
   email: string;
   avatar: string;
   status: 'Active' | 'Offline' | 'Away';
+  phone?: string;
 }
 
 export interface Task {
@@ -72,6 +74,43 @@ export interface Task {
   dueDate: string;
   priority: 'High' | 'Medium' | 'Low';
   status: 'To Do' | 'In Progress' | 'Done';
+  reminderSet?: boolean;
+  reminderTime?: string;
+  reminderPhone?: string;
 }
 
-export type ViewState = 'dashboard' | 'pipeline' | 'proposals' | 'whatsapp' | 'tasks' | 'settings' | 'profile' | 'clients';
+export interface CatalogueItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'Product' | 'Service';
+  sku?: string;
+  image?: string;
+  status: 'Active' | 'Draft' | 'Archived';
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  clientId: string;
+  clientName: string;
+  amount: number;
+  date: string;
+  dueDate: string;
+  status: 'Paid' | 'Pending' | 'Overdue';
+  items: CatalogueItem[];
+  etimsCompliant: boolean;
+}
+
+export interface Transaction {
+  id: string;
+  code: string; // M-Pesa Code e.g., RHI89...
+  amount: number;
+  sender: string;
+  date: string;
+  method: 'M-Pesa' | 'Bank' | 'Cash';
+  status: 'Verified' | 'Unreconciled';
+}
+
+export type ViewState = 'dashboard' | 'pipeline' | 'proposals' | 'bulksms' | 'tasks' | 'settings' | 'profile' | 'clients' | 'catalogue' | 'financials';

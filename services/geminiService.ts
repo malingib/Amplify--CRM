@@ -116,9 +116,13 @@ export const qualifyLead = async (name: string, company: string, notes: string, 
       contents: prompt,
     });
 
-    const text = response.text || "{}";
-    // Clean cleanup code block markers if present
-    const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    let text = response.text || "{}";
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // More robust JSON extraction
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : "{}";
+    
     return JSON.parse(jsonString);
   } catch (error) {
     console.error("Qualification error", error);
@@ -149,11 +153,105 @@ export const generateLeads = async (industry: string, location: string) => {
       contents: prompt,
     });
 
-    const text = response.text || "[]";
-    const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    let text = response.text || "[]";
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    // More robust JSON extraction for arrays
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const jsonString = jsonMatch ? jsonMatch[0] : "[]";
+    
     return JSON.parse(jsonString);
   } catch (error) {
     console.error("Lead Gen error", error);
     return [];
+  }
+};
+
+export const analyzeBusinessForCatalogue = async (businessName: string, url: string, additionalInfo: string) => {
+  try {
+    const model = 'gemini-2.5-flash';
+    
+    // Highly specific prompt to prevent hallucination and force grounding
+    const prompt = `
+      ROLE: Specialist Product Catalogue Data Extractor.
+      TARGET: "${businessName}" ${url ? `at URL: ${url}` : ''}
+      CONTEXT: ${additionalInfo}
+      
+      INSTRUCTIONS:
+      1. SEARCH Google for "${businessName} Kenya products services" to identify their ACTUAL offerings.
+      2. VERIFY specific items found on their website or social media snippets.
+      3. IF exact prices are not found, ESTIMATE realistic Kenyan market rates (KES) for those specific items.
+      4. IF the business is NOT found, generate 4 generic but highly relevant items for that *exact* industry context.
+      
+      STRICT OUTPUT RULES:
+      - Return ONLY a raw JSON Array.
+      - NO Markdown code blocks (no \`\`\`json).
+      - NO intro/outro text.
+      
+      REQUIRED JSON SCHEMA:
+      [
+        {
+          "name": "Short Item Name",
+          "description": "Specific details (max 12 words)",
+          "price": 1500,
+          "category": "Product" or "Service"
+        }
+      ]
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: {
+        // Search Grounding enabled to fetch real data
+        tools: [{ googleSearch: {} }], 
+      },
+    });
+
+    let text = response.text || "[]";
+    
+    // Aggressive cleanup to handle model chatty-ness
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Find the array bracket to bracket
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const jsonString = jsonMatch ? jsonMatch[0] : "[]";
+    
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.error("Catalogue Analysis error", error);
+    return [];
+  }
+};
+
+export const generatePaymentReminder = async (
+  clientName: string,
+  amount: number,
+  invoiceNumber: string,
+  daysOverdue: number
+): Promise<string> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+      Draft a polite but firm WhatsApp message for a Kenyan client named "${clientName}".
+      
+      Context:
+      - Invoice: #${invoiceNumber}
+      - Amount Due: KES ${amount.toLocaleString()}
+      - Status: ${daysOverdue} days overdue
+      
+      Tone: Professional, preserving the relationship ("Undugu"), but emphasizing urgency. 
+      Mention that M-Pesa payment is preferred for immediate settlement.
+      Keep it under 60 words.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+
+    return response.text || "Hello, checking in on the invoice payment.";
+  } catch (error) {
+    return "Error generating reminder.";
   }
 };

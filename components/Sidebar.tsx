@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote } from 'lucide-react';
 import { ViewState, UserRole } from '../types';
 
 interface SidebarProps {
@@ -15,8 +16,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole }
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
     { id: 'pipeline', label: 'Pipeline', icon: Kanban, roles: ['Admin', 'Manager', 'Sales'] },
     { id: 'clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
+    { id: 'financials', label: 'Financials', icon: Banknote, roles: ['Admin', 'Manager'] },
+    { id: 'catalogue', label: 'Catalogue', icon: ShoppingBag, roles: ['Admin', 'Manager', 'Sales'] },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, roles: ['Admin', 'Manager', 'Sales'] },
+    { id: 'bulksms', label: 'Bulk SMS', icon: MessageSquare, roles: ['Admin', 'Manager', 'Sales'] },
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['Admin'] },
   ];
 

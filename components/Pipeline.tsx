@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { DealStage, Lead } from '../types';
-import { MoreHorizontal, Phone, Plus, ArrowRight, Filter, X, Mail, MessageSquare, MapPin, Clock, CheckCircle2, Briefcase, DollarSign, Edit2, Trash2, Sparkles, FilePlus, FileEdit, FileText, Target, BrainCircuit, Loader2, Rocket } from 'lucide-react';
+import { MoreHorizontal, Phone, Plus, ArrowRight, Filter, X, Mail, MessageSquare, MapPin, Clock, CheckCircle2, Briefcase, DollarSign, Edit2, Trash2, Sparkles, FilePlus, FileEdit, FileText, Target, BrainCircuit, Loader2, Rocket, Save } from 'lucide-react';
 import { qualifyLead, generateLeads } from '../services/geminiService';
 
 const initialLeads: Lead[] = [
@@ -73,6 +73,13 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   
+  // Add Deal Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newDeal, setNewDeal] = useState<Partial<Lead>>({
+      name: '', company: '', value: 0, stage: DealStage.INTAKE, notes: '', email: '', phone: ''
+  });
+
   // Lead Gen State
   const [showLeadGen, setShowLeadGen] = useState(false);
   const [genIndustry, setGenIndustry] = useState('');
@@ -98,22 +105,73 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
 
           // Trigger AI Qualification if moving to Qualified stage
           if (nextStage === DealStage.QUALIFIED) {
-            // Indicate processing in UI if needed, or just update asynchronously
             const analysis = await qualifyLead(leadToUpdate.name, leadToUpdate.company, leadToUpdate.notes || '', leadToUpdate.value);
-            
-            // Update state with analysis results
             setLeads(prevLeads => prevLeads.map(l => 
                 l.id === id 
                 ? { ...l, qualificationScore: analysis.score, qualificationSummary: analysis.summary } 
                 : l
             ));
-
-            // Update selected lead if it's still open
             if (selectedLead && selectedLead.id === id) {
                 setSelectedLead(prev => prev ? { ...prev, qualificationScore: analysis.score, qualificationSummary: analysis.summary } : null);
             }
           }
       }
+  };
+
+  const handleSaveDeal = () => {
+      if (!newDeal.name || !newDeal.company) return;
+
+      if (editingId) {
+          // Edit Mode
+          setLeads(prev => prev.map(l => l.id === editingId ? { ...l, ...newDeal } as Lead : l));
+          if (selectedLead && selectedLead.id === editingId) {
+              setSelectedLead(prev => prev ? { ...prev, ...newDeal } : null);
+          }
+      } else {
+          // Create Mode
+          const leadToAdd: Lead = {
+              id: Date.now().toString(),
+              name: newDeal.name,
+              company: newDeal.company,
+              value: newDeal.value || 0,
+              stage: newDeal.stage || DealStage.INTAKE,
+              lastContact: new Date().toISOString().split('T')[0],
+              probability: 20,
+              avatar: `https://picsum.photos/100/100?random=${Math.floor(Math.random() * 100)}`,
+              email: newDeal.email,
+              phone: newDeal.phone,
+              notes: newDeal.notes,
+              proposalStatus: 'None'
+          };
+          setLeads([...leads, leadToAdd]);
+      }
+      closeModal();
+  };
+
+  const handleDeleteDeal = (id: string) => {
+      setLeads(prev => prev.filter(l => l.id !== id));
+      setSelectedLead(null);
+  };
+
+  const openAddModal = (stage?: DealStage) => {
+      setEditingId(null);
+      setNewDeal({ 
+          name: '', company: '', value: 0, stage: stage || DealStage.INTAKE, notes: '', email: '', phone: '' 
+      });
+      setIsAddModalOpen(true);
+  };
+
+  const openEditModal = (lead: Lead) => {
+      setEditingId(lead.id);
+      setNewDeal({ ...lead });
+      setIsAddModalOpen(true);
+      // Close sidebar if opening edit from sidebar
+      // setSelectedLead(null); // Optional: keep sidebar open or close it
+  };
+
+  const closeModal = () => {
+      setIsAddModalOpen(false);
+      setEditingId(null);
   };
 
   const handleGenerateLeads = async () => {
@@ -142,7 +200,6 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
       setGeneratedLeads(generatedLeads.filter(l => l !== leadData));
   };
 
-  // Helper to determine if a proposal exists based on stage or explicit status
   const hasExistingProposal = (lead: Lead) => {
       return lead.proposalStatus === 'Sent' || 
              lead.proposalStatus === 'Draft' || 
@@ -164,7 +221,10 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
               >
                   <Target className="w-4 h-4" /> Lead Acquisition
               </button>
-              <button className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95 ring-2 ring-slate-100">
+              <button 
+                onClick={() => openAddModal()}
+                className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95 ring-2 ring-slate-100"
+              >
                   <Plus className="w-4 h-4" /> New Deal
               </button>
           </div>
@@ -208,9 +268,16 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
 
                             {/* Qualification Badge */}
                             {lead.qualificationScore !== undefined && (
-                                <div className={`mb-4 px-3 py-2 rounded-lg border flex items-center gap-2 ${lead.qualificationScore > 70 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-                                    <BrainCircuit className="w-3.5 h-3.5" />
-                                    <span className="text-[10px] font-bold uppercase tracking-wide">AI Score: {lead.qualificationScore}/100</span>
+                                <div className={`mb-4 px-3 py-2 rounded-lg border flex flex-col gap-2 ${lead.qualificationScore > 70 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
+                                    <div className="flex items-center gap-2">
+                                        <BrainCircuit className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wide">AI Score: {lead.qualificationScore}/100</span>
+                                    </div>
+                                    {lead.qualificationSummary && (
+                                        <p className="text-[10px] leading-relaxed opacity-90 line-clamp-2 border-t border-current/10 pt-1.5 mt-0.5">
+                                            {lead.qualificationSummary}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                             
@@ -237,7 +304,10 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
                         </div>
                     ))}
                     
-                    <button className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-semibold hover:border-slate-300 hover:text-slate-600 hover:bg-white transition flex items-center justify-center gap-2 group text-xs">
+                    <button 
+                        onClick={() => openAddModal(stage)}
+                        className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-semibold hover:border-slate-300 hover:text-slate-600 hover:bg-white transition flex items-center justify-center gap-2 group text-xs"
+                    >
                         <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" /> Add Deal
                     </button>
                 </div>
@@ -245,6 +315,90 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
             ))}
         </div>
       </div>
+
+      {/* Add/Edit Deal Modal */}
+      {isAddModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+                  <button onClick={closeModal} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
+                  
+                  <div className="mb-8">
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{editingId ? 'Edit Deal' : 'New Deal'}</h3>
+                      <p className="text-slate-500 font-medium mt-1 text-sm">Enter the details for this opportunity.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Deal Name</label>
+                          <input 
+                            type="text" 
+                            value={newDeal.name}
+                            onChange={e => setNewDeal({...newDeal, name: e.target.value})}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" 
+                            placeholder="e.g. Annual Software Contract" 
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Company / Client</label>
+                          <input 
+                            type="text" 
+                            value={newDeal.company}
+                            onChange={e => setNewDeal({...newDeal, company: e.target.value})}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" 
+                            placeholder="e.g. Acme Corp" 
+                          />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                              <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Value (KES)</label>
+                              <input 
+                                type="number" 
+                                value={newDeal.value}
+                                onChange={e => setNewDeal({...newDeal, value: parseInt(e.target.value) || 0})}
+                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" 
+                              />
+                          </div>
+                          <div>
+                              <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Stage</label>
+                              <select 
+                                value={newDeal.stage}
+                                onChange={e => setNewDeal({...newDeal, stage: e.target.value as DealStage})}
+                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm"
+                              >
+                                  {stages.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                          </div>
+                      </div>
+                      <div>
+                           <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Contact Email</label>
+                           <input 
+                             type="email" 
+                             value={newDeal.email || ''}
+                             onChange={e => setNewDeal({...newDeal, email: e.target.value})}
+                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" 
+                             placeholder="contact@example.com" 
+                           />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Notes</label>
+                          <textarea 
+                            value={newDeal.notes || ''}
+                            onChange={e => setNewDeal({...newDeal, notes: e.target.value})}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm min-h-[100px] resize-none" 
+                            placeholder="Details about requirements..."
+                          />
+                      </div>
+                  </div>
+
+                  <div className="mt-8 flex gap-3">
+                      <button onClick={closeModal} className="flex-1 py-3.5 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition border border-slate-200 hover:border-slate-300 text-sm">Cancel</button>
+                      <button onClick={handleSaveDeal} className="flex-1 py-3.5 rounded-xl font-bold bg-slate-900 text-white hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 active:scale-95 flex items-center justify-center gap-2 text-sm">
+                          <Save className="w-4 h-4" /> Save Deal
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
 
       {/* Lead Acquisition Engine Modal */}
       {showLeadGen && (
@@ -535,24 +689,21 @@ const Pipeline: React.FC<PipelineProps> = ({ onCreateProposal }) => {
                          <p className="text-sm text-slate-600 leading-relaxed font-medium">
                             {selectedLead.notes || 'No notes available for this deal.'}
                          </p>
-                         <div className="mt-4 pt-4 border-t border-slate-200/60">
-                             <div className="flex items-start gap-3">
-                                 <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold shrink-0">JD</div>
-                                 <div>
-                                     <p className="text-xs font-bold text-slate-900">Meeting Scheduled</p>
-                                     <p className="text-[11px] text-slate-500">Tomorrow at 10:00 AM</p>
-                                 </div>
-                             </div>
-                         </div>
                     </div>
                 </div>
 
                 {/* Footer Actions */}
                 <div className="mt-8 pt-6 border-t border-slate-100 flex gap-3">
-                    <button className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition text-xs flex items-center justify-center gap-2">
+                    <button 
+                        onClick={() => openEditModal(selectedLead)}
+                        className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition text-xs flex items-center justify-center gap-2"
+                    >
                         <Edit2 className="w-3.5 h-3.5" /> Edit Deal
                     </button>
-                    <button className="py-3 px-4 rounded-xl border border-red-100 text-red-500 font-bold hover:bg-red-50 transition text-xs flex items-center justify-center">
+                    <button 
+                        onClick={() => handleDeleteDeal(selectedLead.id)}
+                        className="py-3 px-4 rounded-xl border border-red-100 text-red-500 font-bold hover:bg-red-50 transition text-xs flex items-center justify-center"
+                    >
                         <Trash2 className="w-4 h-4" />
                     </button>
                 </div>

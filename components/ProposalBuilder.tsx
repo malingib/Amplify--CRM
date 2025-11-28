@@ -23,8 +23,6 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
     if (initialData) {
         setClientName(initialData.name);
         setValue(initialData.value.toString());
-        // If editing, pre-fill notes. If creating new, maybe leave empty or use notes as context?
-        // Using notes as base context for both for now, user can edit.
         if (initialData.notes) {
             setServices(initialData.notes); 
         }
@@ -42,7 +40,7 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
+    <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-full flex flex-col">
       <div className="mb-8 shrink-0 flex items-center gap-4">
         <button 
             onClick={onBack}
@@ -62,10 +60,10 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 overflow-hidden min-h-0">
         {/* Input Section */}
-        <div className="lg:col-span-5 h-full overflow-y-auto custom-scrollbar pr-2">
-          <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-200">
+        <div className="lg:col-span-5 h-full overflow-y-auto custom-scrollbar pr-2 pb-2">
+          <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-200 h-full lg:h-auto">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-900/20 border-4 border-slate-100">1</div>
                 <div>
@@ -153,9 +151,9 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
         </div>
 
         {/* Preview Section */}
-        <div className="lg:col-span-7 h-full">
+        <div className="lg:col-span-7 h-full flex flex-col min-h-0 pb-2">
              <div className={`h-full bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 border border-slate-200 flex flex-col overflow-hidden transition-all duration-500 ${step === 1 ? 'opacity-60 grayscale-[0.3]' : 'opacity-100 ring-4 ring-slate-50'}`}>
-                <div className="bg-slate-50/80 p-6 flex justify-between items-center border-b border-slate-200 backdrop-blur-md">
+                <div className="bg-slate-50/80 p-6 flex justify-between items-center border-b border-slate-200 backdrop-blur-md shrink-0">
                     <div className="flex items-center gap-4">
                          <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 border border-slate-200 shadow-sm">
                             <FileText className="w-6 h-6" />
@@ -170,13 +168,15 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
                     </div>
                 </div>
                 
-                <div className="flex-1 p-10 overflow-y-auto prose max-w-none custom-scrollbar bg-white">
+                <div className="flex-1 p-10 overflow-y-auto custom-scrollbar bg-white relative">
                     {generatedContent ? (
-                        <div className="whitespace-pre-wrap text-slate-800 leading-loose font-medium text-base">
-                            {generatedContent}
+                        <div className="prose prose-slate max-w-none prose-headings:font-bold prose-p:text-slate-600 prose-li:text-slate-600 prose-strong:text-slate-900">
+                             <div className="whitespace-pre-wrap text-slate-800 leading-loose font-medium text-base">
+                                {generatedContent}
+                            </div>
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-6">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 space-y-6">
                             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center animate-pulse border-[6px] border-white shadow-inner">
                                 <Sparkles className="w-10 h-10 text-slate-200" />
                             </div>
@@ -185,7 +185,7 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
                     )}
                 </div>
 
-                <div className="p-6 border-t border-slate-200 bg-slate-50/80 flex justify-between items-center backdrop-blur-md">
+                <div className="p-6 border-t border-slate-200 bg-slate-50/80 flex justify-between items-center backdrop-blur-md shrink-0">
                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Status: Draft</span>
                      <div className="flex gap-3">
                         <button className="px-6 py-3 text-slate-600 font-bold hover:bg-white hover:shadow-sm rounded-xl transition border border-transparent hover:border-slate-200 text-sm">Save Draft</button>

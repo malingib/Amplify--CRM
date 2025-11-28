@@ -1,14 +1,19 @@
 
 import React from 'react';
 import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock } from 'lucide-react';
-import { UserRole } from '../types';
+import { UserRole, ViewState } from '../types';
 
 interface DashboardProps {
     userRole: UserRole;
+    onNavigate?: (view: ViewState) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
+const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
   const showFinancials = ['Admin', 'Manager'].includes(userRole);
+
+  const handleNav = (view: ViewState) => {
+    if (onNavigate) onNavigate(view);
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 pb-24">
@@ -32,7 +37,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
          
          {/* Financial Card - Conditional */}
          {showFinancials ? (
-            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
+            <div 
+                onClick={() => handleNav('pipeline')}
+                className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5 cursor-pointer"
+            >
                 <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
                     <TrendingUp className="w-5 h-5" />
                 </div>
@@ -43,7 +51,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
                 <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100 shrink-0">+11%</span>
             </div>
          ) : (
-            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-0.5">
+            <div 
+                onClick={() => handleNav('pipeline')}
+                className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer hover:shadow-md"
+            >
                  <div className="bg-blue-50 p-3 rounded-xl text-blue-600 shrink-0 border border-blue-100">
                     <TrendingUp className="w-5 h-5" />
                 </div>
@@ -54,7 +65,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             </div>
          )}
 
-         <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
+         <div 
+            onClick={() => handleNav('clients')}
+            className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5 cursor-pointer"
+        >
             <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
                 <Users className="w-5 h-5" />
             </div>
@@ -65,7 +79,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100 shrink-0">+12</span>
          </div>
 
-         <div className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5">
+         <div 
+            onClick={() => handleNav('tasks')}
+            className="bg-white p-5 rounded-2xl flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5 cursor-pointer"
+        >
             <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-colors duration-300 shrink-0 border border-slate-100">
                 <Calendar className="w-5 h-5" />
             </div>
@@ -102,7 +119,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             {/* The Colored Cards Row - Compacted */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Royal Blue Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm">
+                <div 
+                    onClick={() => handleNav('pipeline')}
+                    className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm"
+                >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.05] rounded-full -mr-20 -mt-20 pointer-events-none blur-3xl"></div>
                     
                     <div className="flex justify-between items-start relative z-10">
@@ -122,7 +142,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
                 </div>
 
                 {/* Warm Amber Card */}
-                <div className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm">
+                <div 
+                    onClick={() => handleNav('pipeline')}
+                    className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm"
+                >
                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.2] rounded-full -ml-20 -mb-20 pointer-events-none blur-3xl"></div>
 
                     <div className="flex justify-between items-start relative z-10">
@@ -143,7 +166,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
 
                 {/* Deep Black Card - Show only for Admin/Manager/Sales, else show placeholder */}
                 {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
-                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm">
+                    <div 
+                        onClick={() => handleNav('pipeline')}
+                        className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm"
+                    >
                         <div className="absolute top-6 right-6 z-20">
                             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-transform group-hover:rotate-45 shadow-[0_0_30px_rgba(255,255,255,0.15)]">
                                 <ArrowUpRight className="w-6 h-6 text-black" />
@@ -176,9 +202,12 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                 
                  {/* Tasks Schedule */}
-                <div className="md:col-span-6 bg-white rounded-[32px] p-8 min-h-[380px] border border-slate-200 shadow-sm hover:shadow-lg transition-all flex flex-col">
+                <div 
+                    onClick={() => handleNav('tasks')}
+                    className="md:col-span-6 bg-white rounded-[32px] p-8 min-h-[380px] border border-slate-200 shadow-sm hover:shadow-lg transition-all flex flex-col cursor-pointer group"
+                >
                     <div className="flex justify-between items-center mb-6">
-                        <h4 className="font-bold text-slate-900 text-xl tracking-tight">Tasks Schedule</h4>
+                        <h4 className="font-bold text-slate-900 text-xl tracking-tight group-hover:text-blue-600 transition-colors">Tasks Schedule</h4>
                          <div className="flex gap-2">
                             <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 shadow-sm border border-slate-100 transition"><MoreHorizontal className="w-5 h-5" /></button>
                         </div>
@@ -202,7 +231,10 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole }) => {
                 </div>
 
                 {/* Stage Funnel */}
-                <div className="md:col-span-6 bg-gradient-to-b from-indigo-50 to-blue-50 rounded-[32px] p-8 min-h-[380px] relative overflow-hidden flex flex-col border border-blue-100 shadow-sm hover:shadow-lg transition-all">
+                <div 
+                    onClick={() => handleNav('pipeline')}
+                    className="md:col-span-6 bg-gradient-to-b from-indigo-50 to-blue-50 rounded-[32px] p-8 min-h-[380px] relative overflow-hidden flex flex-col border border-blue-100 shadow-sm hover:shadow-lg transition-all cursor-pointer"
+                >
                     <div className="flex justify-between items-center mb-8 relative z-10">
                         <h4 className="font-bold text-slate-900 text-xl tracking-tight">Stage Funnel</h4>
                          <div className="flex gap-2">
