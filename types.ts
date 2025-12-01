@@ -1,13 +1,22 @@
 
 
-export type UserRole = 'Admin' | 'Manager' | 'Sales' | 'Viewer';
+export type UserRole = 'Admin' | 'Manager' | 'Sales' | 'Viewer' | 'SystemOwner';
 
 export enum DealStage {
   INTAKE = 'Intake',
   QUALIFIED = 'Qualified',
   PROPOSAL = 'Proposal',
   NEGOTIATION = 'Negotiation',
-  CLOSED = 'Closed'
+  CLOSED = 'Closed',
+  LOST = 'Lost'
+}
+
+export interface ActivityLog {
+  id: string;
+  type: 'Call' | 'Email' | 'Meeting' | 'Note' | 'System';
+  content: string;
+  date: string; // ISO String
+  performedBy?: string;
 }
 
 export interface Lead {
@@ -22,9 +31,21 @@ export interface Lead {
   email?: string;
   phone?: string;
   notes?: string;
+  ownerId?: string; // ID of the sales rep
   proposalStatus?: 'None' | 'Draft' | 'Sent' | 'Accepted';
   qualificationScore?: number;
   qualificationSummary?: string;
+  source?: 'Manual' | 'AI Search' | 'AI Maps' | 'Referral';
+  socials?: {
+    linkedin?: string;
+    twitter?: string;
+    website?: string;
+  };
+  address?: string;
+  activityLogs?: ActivityLog[];
+  growthPotential?: string;
+  riskAssessment?: string;
+  order: number;
 }
 
 export interface Client {
@@ -113,4 +134,31 @@ export interface Transaction {
   status: 'Verified' | 'Unreconciled';
 }
 
-export type ViewState = 'dashboard' | 'pipeline' | 'proposals' | 'bulksms' | 'tasks' | 'settings' | 'profile' | 'clients' | 'catalogue' | 'financials';
+export interface Tenant {
+  id: string;
+  businessName: string;
+  contactPerson: string;
+  email: string;
+  plan: 'Starter' | 'Pro' | 'Enterprise';
+  status: 'Active' | 'Suspended' | 'Past Due';
+  nextBillingDate: string;
+  usersCount: number;
+  monthlyFee: number;
+}
+
+export type ViewState = 
+  | 'dashboard' 
+  | 'pipeline' 
+  | 'proposals' 
+  | 'bulksms' 
+  | 'tasks' 
+  | 'settings' 
+  | 'profile' 
+  | 'clients' 
+  | 'catalogue' 
+  | 'financials' 
+  | 'system-overview'
+  | 'system-tenants'
+  | 'system-financials'
+  | 'system-approvals'
+  | 'lead-acquisition';

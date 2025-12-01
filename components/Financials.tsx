@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Invoice, Transaction, Client } from '../types';
 import { FileText, Plus, Search, CheckCircle2, AlertCircle, Smartphone, Download, Share2, Sparkles, X, Printer, Receipt, Building2 } from 'lucide-react';
@@ -31,6 +32,32 @@ const Financials: React.FC = () => {
         const text = await generatePaymentReminder(invoice.clientName, invoice.amount, invoice.invoiceNumber, 5);
         setReminderModal({ open: true, invoice, content: text });
         setIsGenerating(false);
+    };
+
+    const handleExport = () => {
+        if (activeTab === 'invoices') {
+            const headers = ['ID,Number,Client,Amount,Date,DueDate,Status'];
+            const rows = invoices.map(inv => `${inv.id},${inv.invoiceNumber},"${inv.clientName}",${inv.amount},${inv.date},${inv.dueDate},${inv.status}`);
+            const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "invoices_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            const headers = ['ID,Code,Sender,Amount,Method,Date,Status'];
+            const rows = transactions.map(tx => `${tx.id},${tx.code},"${tx.sender}",${tx.amount},${tx.method},${tx.date},${tx.status}`);
+            const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "transactions_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     };
 
     return (
@@ -97,9 +124,17 @@ const Financials: React.FC = () => {
                                 <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400" />
                                 <input type="text" placeholder="Search invoices..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-slate-200" />
                             </div>
-                            <button className="px-4 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-slate-900/10">
-                                <Plus className="w-4 h-4" /> Create Invoice
-                            </button>
+                            <div className="flex gap-2">
+                                 <button 
+                                    onClick={handleExport}
+                                    className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs flex items-center gap-2 hover:bg-slate-50 transition"
+                                >
+                                    <Download className="w-4 h-4" /> Export CSV
+                                </button>
+                                <button className="px-4 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-slate-900/10">
+                                    <Plus className="w-4 h-4" /> Create Invoice
+                                </button>
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                             <table className="w-full text-left border-collapse">
@@ -165,7 +200,15 @@ const Financials: React.FC = () => {
                     <>
                         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                             <h3 className="font-bold text-slate-700 text-sm">Recent Transactions (M-Pesa & Bank)</h3>
-                            <button className="text-xs font-bold text-blue-600 hover:underline">Refresh Feed</button>
+                             <div className="flex gap-2">
+                                <button 
+                                    onClick={handleExport}
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl text-xs flex items-center gap-2 hover:bg-slate-50 transition"
+                                >
+                                    <Download className="w-4 h-4" /> Export CSV
+                                </button>
+                                <button className="text-xs font-bold text-blue-600 hover:underline px-4 py-2">Refresh Feed</button>
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                              <table className="w-full text-left border-collapse">

@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.API_KEY || 'dummy_key'; 
@@ -130,40 +131,87 @@ export const qualifyLead = async (name: string, company: string, notes: string, 
   }
 };
 
-export const generateLeads = async (industry: string, location: string) => {
+export const generateLeads = async (industry: string, location: string, useMaps: boolean = false, quantity: number = 5) => {
   try {
     const model = 'gemini-2.5-flash';
+    
+    // Configure tools based on mode
+    // Maps grounding is excellent for physical businesses, Search for digital/service presence
+    const tools = useMaps ? [{ googleMaps: {} }] : [{ googleSearch: {} }];
+    
     const prompt = `
-      Generate 3 fictional but realistic B2B leads for a CRM system in Kenya.
-      Target Industry: ${industry}
-      Target Location: ${location}
+      ROLE: Enterprise Sales Development Representative.
+      TASK: Scout for ${quantity} high-potential B2B verified leads in the "${industry}" sector located in "${location}".
       
-      Return a JSON array with NO markdown formatting. Each object should look like:
-      {
-        "name": "Full Name",
-        "company": "Company Name Ltd",
-        "email": "email@company.co.ke",
-        "value": number (between 50000 and 500000),
-        "notes": "Brief context on what they need"
+      STRATEGY:
+      ${useMaps 
+        ? 'USE GOOGLE MAPS to find physical businesses. Verify they are open and have a high rating.' 
+        : 'SCRAPE THE WEB for official company websites, and attempt to find social profiles (LinkedIn, Twitter) and specific contact details.'
       }
+      
+      CRITERIA:
+      1. Must be an active operating business.
+      2. Prioritize businesses with reachable contact methods.
+      3. Try to find the specific contact person if possible.
+
+      OUTPUT FORMAT:
+      Return ONLY a JSON Array with this exact structure (no markdown code blocks, just raw JSON):
+      [
+        {
+          "company": "Official Business Name",
+          "contact": "Contact Person or 'Procurement Team'",
+          "email": "Email address (or 'N/A')",
+          "phone": "Phone number (or 'N/A')",
+          "website": "Website URL (or 'N/A')",
+          "address": "Physical Address",
+          "socials": {
+             "linkedin": "URL or N/A",
+             "twitter": "URL or N/A"
+          },
+          "value": 50000,
+          "rationale": "Why this is a good lead based on search results.",
+          "growth_potential": "High/Medium/Low - Brief reason",
+          "risk_assessment": "Low/Medium/High - Brief reason"
+        }
+      ]
     `;
 
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
+      config: {
+        tools: tools,
+      }
     });
 
     let text = response.text || "[]";
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Extract grounding metadata (sources)
+    let sources: any[] = [];
+    
+    // Handle Maps or Web Grounding extraction
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    if (groundingChunks) {
+        sources = groundingChunks
+            .filter((c: any) => c.web?.uri || c.web?.title)
+            .map((c: any) => ({
+                title: c.web?.title || 'Verified Source',
+                uri: c.web?.uri || '#'
+            }));
+    }
 
-    // More robust JSON extraction for arrays
+    // Cleanup JSON
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     const jsonString = jsonMatch ? jsonMatch[0] : "[]";
     
-    return JSON.parse(jsonString);
+    const leads = JSON.parse(jsonString);
+
+    return { leads, sources };
+
   } catch (error) {
     console.error("Lead Gen error", error);
-    return [];
+    return { leads: [], sources: [] };
   }
 };
 

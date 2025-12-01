@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, MoreHorizontal, ArrowUpRight, Sparkles, LogOut, Shield, Bell, CreditCard, Settings as SettingsIcon, Save, X, Edit2 } from 'lucide-react';
 import { UserRole } from '../types';
@@ -56,9 +57,9 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
 
         {/* Role Switcher for Demo */}
         {onRoleChange && (
-            <div className="bg-blue-50 border border-blue-100 rounded-[24px] p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+            <div className="bg-blue-50 border border-blue-100 rounded-[24px] p-6 flex flex-col items-center justify-between gap-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
                         <Shield className="w-6 h-6" />
                     </div>
                     <div>
@@ -66,18 +67,18 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                          <p className="text-xs text-slate-500 mt-0.5">Switch roles to test the dashboard permissions.</p>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    {(['Admin', 'Manager', 'Sales', 'Viewer'] as UserRole[]).map(role => (
+                <div className="flex flex-wrap gap-2 justify-center">
+                    {(['Admin', 'Manager', 'Sales', 'Viewer', 'SystemOwner'] as UserRole[]).map(role => (
                         <button
                             key={role}
                             onClick={() => onRoleChange(role)}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
                                 userRole === role 
-                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' 
+                                ? role === 'SystemOwner' ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20' : 'bg-blue-600 text-white shadow-md shadow-blue-600/20' 
                                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                             }`}
                         >
-                            {role}
+                            {role === 'SystemOwner' ? 'System Owner' : role}
                         </button>
                     ))}
                 </div>
