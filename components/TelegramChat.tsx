@@ -5,7 +5,7 @@ import { Search, Send, Sparkles, List, Download, Filter, CheckCircle2, XCircle, 
 import { interpretCrmCommand, qualifyLead } from '../services/geminiService';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie, Legend } from 'recharts';
 
-interface WhatsAppChatProps {
+interface TelegramChatProps {
     leads?: Lead[];
     onUpdateLeads?: (leads: Lead[]) => void;
     userRole?: UserRole;
@@ -29,7 +29,7 @@ const initialAuditLogs: AuditLogEntry[] = [
     { id: 'sys_log_007', timestamp: '2023-10-23 08:30:00', actor: 'Amplify AI', action: 'System Status', status: 'Success', details: 'Diagnostic run completed', severity: 'Low' },
 ];
 
-const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, userRole = 'Admin' }) => {
+const TelegramChat: React.FC<TelegramChatProps> = ({ leads = [], onUpdateLeads, userRole = 'Admin' }) => {
     const [viewMode, setViewMode] = useState<'terminal' | 'audit'>('terminal');
     
     // Command Center State
@@ -37,7 +37,7 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
         { 
             id: 'bot-init', 
             sender: 'bot', 
-            text: `**System Online v2.5**\nLogged in as: **${userRole}**\n\nI am your AI System Admin. You can speak naturally to manage the CRM.\n\nType **Help** for a list of commands.`, 
+            text: `**Telegram Bridge v2.5**\nLogged in as: **${userRole}**\n\nI am your AI System Admin connected via Telegram Bot API. You can speak naturally to manage the CRM.\n\nType **Help** for a list of commands.`, 
             timestamp: new Date() 
         }
     ]);
@@ -243,7 +243,7 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
                     break;
 
                 case 'SYSTEM_STATUS':
-                    responseText = `🖥️ **System Status**\n\n• **API Gateway**: 🟢 Online (24ms)\n• **Database**: 🟢 Healthy\n• **WhatsApp Bridge**: 🟢 Connected\n• **AI Agent**: 🟢 Active (v2.5)\n\nYour Role: **${userRole}**`;
+                    responseText = `🖥️ **System Status**\n\n• **API Gateway**: 🟢 Online (24ms)\n• **Database**: 🟢 Healthy\n• **Telegram Bridge**: 🟢 Connected\n• **AI Agent**: 🟢 Active (v2.5)\n\nYour Role: **${userRole}**`;
                     actionLog = { action: 'System Check', status: 'Success', details: 'Ran diagnostics', severity: 'Low' };
                     break;
 
@@ -299,12 +299,12 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
             {/* Top Bar Switcher */}
             <div className="flex justify-between items-center mb-2 shrink-0">
                 <div className="flex items-center gap-4">
-                    <div className="bg-slate-900 p-2 rounded-xl shadow-lg shadow-slate-900/20">
+                    <div className="bg-sky-500 p-2 rounded-xl shadow-lg shadow-sky-500/20">
                         <Terminal className="w-6 h-6 text-white" />
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">AI Command Center</h2>
-                        <p className="text-slate-500 font-medium text-sm">Execute system commands via natural language.</p>
+                        <p className="text-slate-500 font-medium text-sm">Execute system commands via Telegram Bridge.</p>
                     </div>
                 </div>
                 <div className="flex p-1.5 bg-slate-100 rounded-xl">
@@ -337,11 +337,11 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
                     {/* Terminal Header */}
                     <div className="bg-slate-50/80 backdrop-blur-xl p-6 border-b border-slate-200 flex justify-between items-center relative z-10">
                         <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-sm border-[2px] border-white ring-1 ring-slate-200">
-                                 <Sparkles className="w-5 h-5 text-yellow-300" />
+                             <div className="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center shadow-sm border-[2px] border-white ring-1 ring-slate-200">
+                                 <Send className="w-5 h-5 text-white" />
                              </div>
                              <div>
-                                 <h4 className="font-bold text-lg text-slate-900 tracking-tight">Amplify Copilot</h4>
+                                 <h4 className="font-bold text-lg text-slate-900 tracking-tight">Telegram Copilot</h4>
                                  <div className="flex items-center gap-2">
                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
@@ -367,7 +367,7 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
                         {messages.map(msg => (
                             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 {msg.sender === 'bot' && (
-                                    <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center mr-3 shrink-0 border border-slate-800 mt-1 shadow-sm">
+                                    <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center mr-3 shrink-0 border border-sky-400 mt-1 shadow-sm">
                                         <Bot className="w-4 h-4 text-white" />
                                     </div>
                                 )}
@@ -459,7 +459,7 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
                         
                         {isThinking && (
                             <div className="flex justify-start animate-pulse">
-                                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center mr-3 shrink-0 border border-slate-800 mt-1">
+                                <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center mr-3 shrink-0 border border-sky-400 mt-1">
                                     <Bot className="w-4 h-4 text-white" />
                                 </div>
                                 <div className="bg-white px-6 py-4 rounded-2xl rounded-bl-none border border-slate-200 shadow-sm flex items-center gap-2">
@@ -664,4 +664,4 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
     );
 };
 
-export default WhatsAppChat;
+export default TelegramChat;

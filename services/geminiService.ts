@@ -72,6 +72,56 @@ export const generateChatReply = async (
   }
 };
 
+export const interpretCrmCommand = async (input: string, userRole: string) => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+      You are "Amplify Copilot", an advanced AI agent managing an Enterprise CRM connected via Telegram.
+      User Role: ${userRole}
+      User Input: "${input}"
+
+      Your goal is to parse natural language into precise CRM commands.
+      
+      INTENTS:
+      1. CREATE_LEAD: User wants to add a new opportunity. Extract 'name' (company/person) and 'value'. Default value to 0 if not specified.
+      2. UPDATE_LEAD: User wants to modify an existing deal. Extract 'name' (to match against), 'field' (stage, value, probability), and 'newValue'.
+      3. DELETE_LEAD: User wants to remove a deal. Extract 'name'.
+      4. QUERY_LEAD: User wants to see stats, counts, or a visualization of the pipeline.
+      5. ANALYZE_LEAD: User wants deep BANT qualification, risk assessment, or insights on a specific lead. Extract 'name'.
+      6. SYSTEM_STATUS: User asks about server health, API latency, or system uptime.
+      7. GENERAL_CHAT: Greetings, help requests, or off-topic queries.
+
+      MAPPING RULES:
+      - Money: "1.5m" -> 1500000, "50k" -> 50000.
+      - Stages: Map vague terms to: 'Intake', 'Qualified', 'Proposal', 'Negotiation', 'Closed', 'Lost'.
+      - Probability: Extract percentage as integer (0-100).
+
+      OUTPUT SCHEMA (JSON ONLY):
+      {
+        "intent": "CREATE_LEAD" | "UPDATE_LEAD" | "DELETE_LEAD" | "QUERY_LEAD" | "ANALYZE_LEAD" | "SYSTEM_STATUS" | "GENERAL_CHAT",
+        "data": {
+          "name": string | null,
+          "value": number | null,
+          "field": "value" | "stage" | "probability" | null,
+          "newValue": string | number | null
+        },
+        "response_text": string // A professional, brief confirmation of the action or the answer to the chat.
+      }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: { responseMimeType: 'application/json' }
+    });
+
+    return JSON.parse(response.text || '{}');
+  } catch (error) {
+    console.error("Command interpretation failed", error);
+    return { intent: 'GENERAL_CHAT', response_text: "I am having trouble processing that command. Please try again." };
+  }
+};
+
 export const analyzePipeline = async (leadsCount: number, revenue: number): Promise<string> => {
    try {
     const model = 'gemini-2.5-flash';
@@ -99,35 +149,69 @@ export const qualifyLead = async (name: string, company: string, notes: string, 
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
-      Act as a Senior Sales Director. Analyze this lead based on BANT (Budget, Authority, Need, Timeline).
+      Act as a Senior Sales Director. Perform a deep BANT (Budget, Authority, Need, Timeline) analysis on this lead.
       
       Lead: ${name} from ${company}
       Deal Value: KES ${value}
       Notes: ${notes}
 
-      Return a JSON object with NO markdown formatting:
+      Return a JSON object with NO markdown:
       {
         "score": number (0-100),
-        "summary": "One sentence explanation of the score."
+        "summary": "One sentence summary.",
+        "strengths": ["string", "string"],
+        "weaknesses": ["string", "string"],
+        "bant_breakdown": {
+            "budget": "High/Medium/Low",
+            "authority": "Direct/Influencer/Gatekeeper",
+            "need": "Critical/Nice-to-have",
+            "timeline": "Immediate/Quarterly/Long-term"
+        }
       }
     `;
 
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
+      config: { responseMimeType: 'application/json' }
     });
 
-    let text = response.text || "{}";
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    // More robust JSON extraction
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : "{}";
-    
-    return JSON.parse(jsonString);
+    return JSON.parse(response.text || '{}');
   } catch (error) {
     console.error("Qualification error", error);
-    return { score: 50, summary: "AI analysis failed, manual review required." };
+    return { score: 50, summary: "AI analysis failed, manual review required.", strengths: [], weaknesses: [] };
+  }
+};
+
+export const generateFollowUpStrategy = async (name: string, company: string, stage: string, lastContact: string, notes: string) => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+      You are a Sales Coach. Generate a follow-up strategy for this lead.
+      
+      Lead: ${name} from ${company}
+      Current Stage: ${stage}
+      Last Contact: ${lastContact}
+      Notes: ${notes}
+
+      Output strict JSON:
+      {
+        "suggested_action": "Email/Call/Meeting",
+        "rationale": "Why this action now?",
+        "email_draft": "Subject line and body for a short, punchy email.",
+        "sms_draft": "Short WhatsApp/SMS message (under 20 words)."
+      }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: { responseMimeType: 'application/json' }
+    });
+
+    return JSON.parse(response.text || '{}');
+  } catch (error) {
+    return { suggested_action: "Review", rationale: "AI Offline", email_draft: "", sms_draft: "" };
   }
 };
 
@@ -281,7 +365,7 @@ export const generatePaymentReminder = async (
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
-      Draft a polite but firm WhatsApp message for a Kenyan client named "${clientName}".
+      Draft a polite but firm Telegram message for a Kenyan client named "${clientName}".
       
       Context:
       - Invoice: #${invoiceNumber}

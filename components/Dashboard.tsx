@@ -1,7 +1,9 @@
 
+
+
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock, Filter, Download, ChevronDown, Activity, DollarSign, Target, Briefcase, Clock, RefreshCw, ChevronRight, CreditCard } from 'lucide-react';
-import { UserRole, ViewState } from '../types';
+import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock, Filter, Download, ChevronDown, Activity, DollarSign, Target, Briefcase, Clock, RefreshCw, ChevronRight, CreditCard, Layout } from 'lucide-react';
+import { UserRole, ViewState, SystemConfig } from '../types';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell, PieChart, Pie, Legend, LineChart, Line, ComposedChart
@@ -49,15 +51,22 @@ const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#64748b'];
 interface DashboardProps {
     userRole: UserRole;
     onNavigate?: (view: ViewState) => void;
+    systemConfig?: SystemConfig;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfig }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [timeRange, setTimeRange] = useState('This Quarter');
   const [isLoading, setIsLoading] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const showFinancials = ['Admin', 'Manager', 'SystemOwner'].includes(userRole);
+  
+  // Widget Visibility based on Config
+  const showOverview = systemConfig?.dashboardWidgets?.overview ?? true;
+  const showPerformance = systemConfig?.dashboardWidgets?.performance ?? true;
+  const showActivity = systemConfig?.dashboardWidgets?.activity ?? true;
+  const showRevenue = systemConfig?.dashboardWidgets?.revenue ?? true;
 
   // Simulate data fetching on tab/filter change
   useEffect(() => {
@@ -101,8 +110,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
                     <p className="text-slate-500 font-medium mt-1 text-sm">High priority items requiring attention.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition hover:border-slate-300 shadow-sm">
-                        <MoreHorizontal className="w-5 h-5" />
+                    <button onClick={() => handleNav('settings')} className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition hover:border-slate-300 shadow-sm">
+                        <Layout className="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -110,157 +119,161 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
             {isLoading ? <LoadingSkeleton /> : (
             <>
                 {/* The Colored Cards Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Royal Blue Card */}
-                    <div 
-                        onClick={() => handleNav('pipeline')}
-                        className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm"
-                    >
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.05] rounded-full -mr-20 -mt-20 pointer-events-none blur-3xl"></div>
-                        <div className="flex justify-between items-start relative z-10">
-                            <div className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg text-white ring-1 ring-white/20 uppercase tracking-wider">Oct 4 • Active</div>
-                            <button className="bg-white/10 p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition ring-1 ring-white/10"><ArrowUpRight className="w-5 h-5 text-white" /></button>
-                        </div>
-                        <div className="space-y-1 relative z-10 mt-auto mb-6">
-                            <p className="text-xs font-bold text-blue-100 uppercase tracking-wider opacity-90">Safaricom PLC</p>
-                            <p className="text-3xl font-bold tracking-tight leading-tight">Enterprise Upgrade</p>
-                        </div>
-                        <div className="flex items-end justify-between relative z-10">
-                            <span className="text-4xl font-bold tracking-tighter">$11.2k</span>
-                            <div className="flex -space-x-3 pl-4 pb-1">
-                                {[1,2,3].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-blue-600 object-cover shadow-sm" alt="" />)}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Warm Amber Card */}
-                    <div 
-                        onClick={() => handleNav('pipeline')}
-                        className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm"
-                    >
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.2] rounded-full -ml-20 -mb-20 pointer-events-none blur-3xl"></div>
-                        <div className="flex justify-between items-start relative z-10">
-                            <div className="text-[10px] font-bold bg-black/5 px-3 py-1.5 rounded-lg text-slate-900 backdrop-blur-sm border border-black/5 uppercase tracking-wider">Oct 11 • Pending</div>
-                            <button className="bg-black/5 p-2 rounded-full hover:bg-black/10 transition border border-black/5"><ArrowUpRight className="w-5 h-5 text-slate-900" /></button>
-                        </div>
-                        <div className="space-y-1 relative z-10 mt-auto mb-6">
-                            <p className="text-xs font-bold text-slate-900/70 uppercase tracking-wider">Mombasa Marine</p>
-                            <p className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Logistics Hub</p>
-                        </div>
-                        <div className="flex items-end justify-between relative z-10">
-                            <span className="text-4xl font-bold tracking-tighter text-slate-900">$4.1k</span>
-                            <div className="flex -space-x-3 pl-4 pb-1">
-                                {[4,5].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-amber-400 object-cover shadow-sm" alt="" />)}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Deep Black Card */}
-                    {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
+                {showOverview && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Royal Blue Card */}
                         <div 
                             onClick={() => handleNav('pipeline')}
-                            className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm"
+                            className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm"
                         >
-                            <div className="absolute top-6 right-6 z-20">
-                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-transform group-hover:rotate-45 shadow-[0_0_30px_rgba(255,255,255,0.15)]">
-                                    <ArrowUpRight className="w-6 h-6 text-black" />
-                                </div>
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.05] rounded-full -mr-20 -mt-20 pointer-events-none blur-3xl"></div>
+                            <div className="flex justify-between items-start relative z-10">
+                                <div className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg text-white ring-1 ring-white/20 uppercase tracking-wider">Oct 4 • Active</div>
+                                <button className="bg-white/10 p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition ring-1 ring-white/10"><ArrowUpRight className="w-5 h-5 text-white" /></button>
                             </div>
-                            <div className="mt-auto mb-6 space-y-1 relative z-10">
-                                <div className="text-[10px] font-bold text-slate-400 mb-4 border border-slate-700 px-2 py-1 rounded-md w-fit uppercase tracking-wider bg-slate-800/50">Oct 12 • Closing</div>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Absolute Systems</p>
-                                <p className="text-3xl font-bold tracking-tight text-white leading-tight">SaaS Contract</p>
+                            <div className="space-y-1 relative z-10 mt-auto mb-6">
+                                <p className="text-xs font-bold text-blue-100 uppercase tracking-wider opacity-90">Safaricom PLC</p>
+                                <p className="text-3xl font-bold tracking-tight leading-tight">Enterprise Upgrade</p>
                             </div>
                             <div className="flex items-end justify-between relative z-10">
-                                <span className="text-4xl font-bold tracking-tighter text-white">$2.1k</span>
+                                <span className="text-4xl font-bold tracking-tighter">$11.2k</span>
                                 <div className="flex -space-x-3 pl-4 pb-1">
-                                    {[6,7,8].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-slate-900 object-cover shadow-sm" alt="" />)}
+                                    {[1,2,3].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-blue-600 object-cover shadow-sm" alt="" />)}
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col items-center justify-center text-center border border-slate-200/60 min-h-[280px]">
-                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
-                                <Lock className="w-6 h-6 text-slate-300" />
+
+                        {/* Warm Amber Card */}
+                        <div 
+                            onClick={() => handleNav('pipeline')}
+                            className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm"
+                        >
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.2] rounded-full -ml-20 -mb-20 pointer-events-none blur-3xl"></div>
+                            <div className="flex justify-between items-start relative z-10">
+                                <div className="text-[10px] font-bold bg-black/5 px-3 py-1.5 rounded-lg text-slate-900 backdrop-blur-sm border border-black/5 uppercase tracking-wider">Oct 11 • Pending</div>
+                                <button className="bg-black/5 p-2 rounded-full hover:bg-black/10 transition border border-black/5"><ArrowUpRight className="w-5 h-5 text-slate-900" /></button>
                             </div>
-                            <h4 className="font-bold text-slate-900">Access Restricted</h4>
-                            <p className="text-xs text-slate-500 mt-1 max-w-[150px]">Deal details are limited to sales team members.</p>
+                            <div className="space-y-1 relative z-10 mt-auto mb-6">
+                                <p className="text-xs font-bold text-slate-900/70 uppercase tracking-wider">Mombasa Marine</p>
+                                <p className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Logistics Hub</p>
+                            </div>
+                            <div className="flex items-end justify-between relative z-10">
+                                <span className="text-4xl font-bold tracking-tighter text-slate-900">$4.1k</span>
+                                <div className="flex -space-x-3 pl-4 pb-1">
+                                    {[4,5].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-amber-400 object-cover shadow-sm" alt="" />)}
+                                </div>
+                            </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Deep Black Card */}
+                        {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
+                            <div 
+                                onClick={() => handleNav('pipeline')}
+                                className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-slate-900/30 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-slate-800 ring-4 ring-white shadow-sm"
+                            >
+                                <div className="absolute top-6 right-6 z-20">
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center transition-transform group-hover:rotate-45 shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+                                        <ArrowUpRight className="w-6 h-6 text-black" />
+                                    </div>
+                                </div>
+                                <div className="mt-auto mb-6 space-y-1 relative z-10">
+                                    <div className="text-[10px] font-bold text-slate-400 mb-4 border border-slate-700 px-2 py-1 rounded-md w-fit uppercase tracking-wider bg-slate-800/50">Oct 12 • Closing</div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Absolute Systems</p>
+                                    <p className="text-3xl font-bold tracking-tight text-white leading-tight">SaaS Contract</p>
+                                </div>
+                                <div className="flex items-end justify-between relative z-10">
+                                    <span className="text-4xl font-bold tracking-tighter text-white">$2.1k</span>
+                                    <div className="flex -space-x-3 pl-4 pb-1">
+                                        {[6,7,8].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-slate-900 object-cover shadow-sm" alt="" />)}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col items-center justify-center text-center border border-slate-200/60 min-h-[280px]">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                                    <Lock className="w-6 h-6 text-slate-300" />
+                                </div>
+                                <h4 className="font-bold text-slate-900">Access Restricted</h4>
+                                <p className="text-xs text-slate-500 mt-1 max-w-[150px]">Deal details are limited to sales team members.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Second Row: Charts & Calendar */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    {/* Stage Funnel Chart */}
-                    <div className="md:col-span-8 bg-white rounded-[32px] p-8 min-h-[380px] border border-slate-200 shadow-sm flex flex-col">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h4 className="font-bold text-slate-900 text-xl tracking-tight">Pipeline Volume</h4>
-                                <p className="text-xs text-slate-500 font-medium">Deal distribution by stage.</p>
-                            </div>
-                            <button className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition"><MoreHorizontal className="w-5 h-5" /></button>
-                        </div>
-                        <div className="flex-1 w-full min-h-[250px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={pipelineStageData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-                                    <Tooltip 
-                                        cursor={{fill: '#f8fafc'}}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
-                                    />
-                                    <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={40}>
-                                        {pipelineStageData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* Tasks Schedule (Mini) */}
-                    <div 
-                        onClick={() => handleNav('tasks')}
-                        className="md:col-span-4 bg-slate-50 rounded-[32px] p-8 min-h-[380px] border border-slate-100 flex flex-col cursor-pointer group hover:border-slate-200 transition-colors"
-                    >
-                        <div className="flex justify-between items-center mb-6">
-                            <h4 className="font-bold text-slate-900 text-xl tracking-tight">Today's Tasks</h4>
-                            <div className="bg-white p-2 rounded-full shadow-sm">
-                                <Calendar className="w-5 h-5 text-slate-600" />
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3">
-                                <div className="mt-1 w-2 h-2 rounded-full bg-red-500"></div>
+                {showPerformance && (
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        {/* Stage Funnel Chart */}
+                        <div className="md:col-span-8 bg-white rounded-[32px] p-8 min-h-[380px] border border-slate-200 shadow-sm flex flex-col">
+                            <div className="flex justify-between items-center mb-6">
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900">Prepare Q3 Report</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">Due: 2:00 PM</p>
+                                    <h4 className="font-bold text-slate-900 text-xl tracking-tight">Pipeline Volume</h4>
+                                    <p className="text-xs text-slate-500 font-medium">Deal distribution by stage.</p>
                                 </div>
+                                <button className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition"><MoreHorizontal className="w-5 h-5" /></button>
                             </div>
-                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3">
-                                <div className="mt-1 w-2 h-2 rounded-full bg-amber-500"></div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">Call Alice Kamau</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">Due: 4:30 PM</p>
-                                </div>
-                            </div>
-                            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3 opacity-60">
-                                <div className="mt-1 w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900 line-through">Team Sync</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">Completed</p>
-                                </div>
+                            <div className="flex-1 w-full min-h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={pipelineStageData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                                        <Tooltip 
+                                            cursor={{fill: '#f8fafc'}}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                        />
+                                        <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={40}>
+                                            {pipelineStageData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
 
-                        <button onClick={(e) => { e.stopPropagation(); handleNav('tasks'); }} className="mt-auto w-full py-3 bg-white text-slate-900 font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 text-xs transition flex items-center justify-center gap-2 group/btn">
-                            View Calendar <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
-                        </button>
+                        {/* Tasks Schedule (Mini) */}
+                        <div 
+                            onClick={() => handleNav('tasks')}
+                            className="md:col-span-4 bg-slate-50 rounded-[32px] p-8 min-h-[380px] border border-slate-100 flex flex-col cursor-pointer group hover:border-slate-200 transition-colors"
+                        >
+                            <div className="flex justify-between items-center mb-6">
+                                <h4 className="font-bold text-slate-900 text-xl tracking-tight">Today's Tasks</h4>
+                                <div className="bg-white p-2 rounded-full shadow-sm">
+                                    <Calendar className="w-5 h-5 text-slate-600" />
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3">
+                                    <div className="mt-1 w-2 h-2 rounded-full bg-red-500"></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Prepare Q3 Report</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Due: 2:00 PM</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3">
+                                    <div className="mt-1 w-2 h-2 rounded-full bg-amber-500"></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Call Alice Kamau</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Due: 4:30 PM</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-start gap-3 opacity-60">
+                                    <div className="mt-1 w-2 h-2 rounded-full bg-emerald-500"></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900 line-through">Team Sync</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">Completed</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onClick={(e) => { e.stopPropagation(); handleNav('tasks'); }} className="mt-auto w-full py-3 bg-white text-slate-900 font-bold rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 text-xs transition flex items-center justify-center gap-2 group/btn">
+                                View Calendar <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </>
             )}
         </div>
@@ -509,7 +522,12 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
             <span className="text-2xl font-bold text-slate-900 whitespace-nowrap tracking-tight">Dashboard</span>
             <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden md:block"></div>
             <div className="flex gap-2">
-                {['Overview', 'Sales Performance', 'Team Activity', showFinancials ? 'Revenue' : null].filter(Boolean).map((item, i) => (
+                {[
+                    showOverview ? 'Overview' : null, 
+                    showPerformance ? 'Sales Performance' : null, 
+                    showActivity ? 'Team Activity' : null, 
+                    showFinancials && showRevenue ? 'Revenue' : null
+                ].filter(Boolean).map((item, i) => (
                     <button 
                         key={item} 
                         onClick={() => setActiveTab(item as string)}
@@ -558,6 +576,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
       </div>
 
       {/* Stats Row */}
+      {showOverview && (
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5">
          {showFinancials ? (
             <div 
@@ -636,12 +655,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate }) => {
              </div>
          </div>
       </div>
+      )}
 
       {/* Main Content Area based on Tab */}
-      {activeTab === 'Overview' && renderOverview()}
-      {activeTab === 'Sales Performance' && renderPerformance()}
-      {activeTab === 'Team Activity' && renderTeamActivity()}
-      {activeTab === 'Revenue' && showFinancials && renderRevenue()} 
+      {activeTab === 'Overview' && showOverview && renderOverview()}
+      {activeTab === 'Sales Performance' && showPerformance && renderPerformance()}
+      {activeTab === 'Team Activity' && showActivity && renderTeamActivity()}
+      {activeTab === 'Revenue' && showFinancials && showRevenue && renderRevenue()} 
       
     </div>
   );

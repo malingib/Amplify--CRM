@@ -1,26 +1,31 @@
 
 
 import React from 'react';
-import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote, ShieldCheck, Building2, FileText, PieChart } from 'lucide-react';
-import { ViewState, UserRole } from '../types';
+import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote, ShieldCheck, Building2, FileText, PieChart, Send, FileCheck } from 'lucide-react';
+import { ViewState, UserRole, SystemConfig } from '../types';
 
 interface SidebarProps {
   currentView: ViewState;
   onChangeView: (view: ViewState) => void;
   userRole: UserRole;
+  systemConfig: SystemConfig;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, systemConfig }) => {
   
   const allMenuItems = [
     // Regular User Items
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
     { id: 'pipeline', label: 'Pipeline', icon: Kanban, roles: ['Admin', 'Manager', 'Sales'] },
     { id: 'clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
+    
+    // Conditionally rendered modules
+    { id: 'telegram', label: 'Copilot', icon: Send, roles: ['Admin', 'Manager', 'Sales'], module: 'telegram' },
     { id: 'financials', label: 'Financials', icon: Banknote, roles: ['Admin', 'Manager'] },
+    { id: 'compliance', label: 'Compliance', icon: FileCheck, roles: ['Admin', 'Manager'], module: 'compliance' },
     { id: 'catalogue', label: 'Catalogue', icon: ShoppingBag, roles: ['Admin', 'Manager', 'Sales'] },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
-    { id: 'bulksms', label: 'Bulk SMS', icon: MessageSquare, roles: ['Admin', 'Manager', 'Sales'] },
+    { id: 'bulksms', label: 'Bulk SMS', icon: MessageSquare, roles: ['Admin', 'Manager', 'Sales'], module: 'bulkSms' },
     
     // System Owner Specific Items
     { id: 'system-overview', label: 'Overview', icon: PieChart, roles: ['SystemOwner'] },
@@ -32,7 +37,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole }
     { id: 'settings', label: 'Settings', icon: Settings, roles: ['Admin', 'SystemOwner'] },
   ];
 
-  const visibleItems = allMenuItems.filter(item => item.roles.includes(userRole));
+  const visibleItems = allMenuItems.filter(item => {
+    // Role check
+    if (!item.roles.includes(userRole)) return false;
+    
+    // Module configuration check
+    if (item.module) {
+        // @ts-ignore - Dynamic key access
+        if (!systemConfig.modules[item.module]) return false;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="hidden md:flex flex-col fixed left-6 top-6 bottom-6 w-20 bg-[#1c1c1c] rounded-[40px] items-center py-8 z-50 shadow-2xl shadow-slate-900/20">
@@ -73,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole }
 
       {/* Bottom Actions */}
       <div className="flex flex-col gap-6 px-3 w-full">
-        {userRole !== 'SystemOwner' && (
+        {userRole !== 'SystemOwner' && systemConfig.modules.leadAcquisition && (
           <button 
             onClick={() => onChangeView('lead-acquisition')}
             className={`w-full aspect-square flex items-center justify-center rounded-full transition-all duration-300 ${

@@ -1,13 +1,17 @@
 
 
+
+
+
 import React, { useState } from 'react';
 import { Invoice, Transaction, Client } from '../types';
-import { FileText, Plus, Search, CheckCircle2, AlertCircle, Smartphone, Download, Share2, Sparkles, X, Printer, Receipt, Building2 } from 'lucide-react';
+import { FileText, Plus, Search, CheckCircle2, AlertCircle, Smartphone, Download, Share2, Sparkles, X, Printer, Receipt, Building2, CreditCard, Loader2, Send } from 'lucide-react';
 import { generatePaymentReminder } from '../services/geminiService';
+import { generatePaymentLink } from '../services/paystackService';
 
 const initialInvoices: Invoice[] = [
-    { id: '1', invoiceNumber: 'INV-001', clientId: '1', clientName: 'Wanjiku Trading', amount: 150000, date: '2023-10-01', dueDate: '2023-10-15', status: 'Overdue', items: [], etimsCompliant: true },
-    { id: '2', invoiceNumber: 'INV-002', clientId: '2', clientName: 'TechSahara', amount: 85000, date: '2023-10-10', dueDate: '2023-10-25', status: 'Pending', items: [], etimsCompliant: true },
+    { id: '1', invoiceNumber: 'INV-001', clientId: '1', clientName: 'Wanjiku Trading', amount: 150000, date: '2023-10-01', dueDate: '2023-10-15', status: 'Overdue', items: [], etimsCompliant: false },
+    { id: '2', invoiceNumber: 'INV-002', clientId: '2', clientName: 'TechSahara', amount: 85000, date: '2023-10-10', dueDate: '2023-10-25', status: 'Pending', items: [], etimsCompliant: false },
     { id: '3', invoiceNumber: 'INV-003', clientId: '5', clientName: 'Mombasa Marine', amount: 2500000, date: '2023-10-05', dueDate: '2023-10-05', status: 'Paid', items: [], etimsCompliant: true },
 ];
 
@@ -26,12 +30,30 @@ const Financials: React.FC = () => {
     const [reminderModal, setReminderModal] = useState<{open: boolean, invoice?: Invoice, content?: string}>({ open: false });
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Paystack State
+    const [generatingLinkFor, setGeneratingLinkFor] = useState<string | null>(null);
+
     const handleGenerateReminder = async (invoice: Invoice) => {
         setIsGenerating(true);
         setReminderModal({ open: true, invoice });
         const text = await generatePaymentReminder(invoice.clientName, invoice.amount, invoice.invoiceNumber, 5);
         setReminderModal({ open: true, invoice, content: text });
         setIsGenerating(false);
+    };
+
+    const handleCreatePaymentLink = async (invoice: Invoice) => {
+        setGeneratingLinkFor(invoice.id);
+        // Mock email
+        const email = invoice.clientName.toLowerCase().replace(' ', '') + '@example.com';
+        const response = await generatePaymentLink(email, invoice.amount, invoice.invoiceNumber);
+        
+        if (response.status === 'success' && response.data) {
+            setInvoices(prev => prev.map(inv => inv.id === invoice.id ? { ...inv, paymentLink: response.data?.authorization_url } : inv));
+            alert(`Payment Link Generated: ${response.data.authorization_url}`);
+        } else {
+            alert('Failed to generate Paystack link.');
+        }
+        setGeneratingLinkFor(null);
     };
 
     const handleExport = () => {
@@ -176,13 +198,23 @@ const Financials: React.FC = () => {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
+                                                    {inv.status !== 'Paid' && (
+                                                        <button 
+                                                            onClick={() => handleCreatePaymentLink(inv)}
+                                                            disabled={generatingLinkFor === inv.id}
+                                                            className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition border border-blue-100" 
+                                                            title="Generate Paystack Link"
+                                                        >
+                                                            {generatingLinkFor === inv.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                                        </button>
+                                                    )}
                                                     {inv.status === 'Overdue' && (
                                                         <button 
                                                             onClick={() => handleGenerateReminder(inv)}
-                                                            className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition border border-green-100" 
-                                                            title="Generate WhatsApp Reminder"
+                                                            className="p-2 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 transition border border-sky-100" 
+                                                            title="Generate Telegram Reminder"
                                                         >
-                                                            <Share2 className="w-4 h-4" />
+                                                            <Send className="w-4 h-4" />
                                                         </button>
                                                     )}
                                                     <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition">
@@ -257,7 +289,7 @@ const Financials: React.FC = () => {
                     <div className="bg-white w-full max-w-md rounded-[32px] shadow-2xl p-6 border border-slate-200">
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-green-500" />
+                                <Sparkles className="w-5 h-5 text-sky-500" />
                                 <h3 className="font-bold text-slate-900">Payment Reminder</h3>
                             </div>
                             <button onClick={() => setReminderModal({ open: false })} className="text-slate-400 hover:text-slate-900"><X className="w-5 h-5" /></button>
@@ -265,21 +297,21 @@ const Financials: React.FC = () => {
                         
                         {isGenerating ? (
                             <div className="h-32 flex flex-col items-center justify-center text-slate-400 gap-3">
-                                <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
                                 <span className="text-xs font-bold">Drafting message...</span>
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <div className="bg-green-50 p-4 rounded-2xl border border-green-100 text-sm font-medium text-slate-800 leading-relaxed relative">
-                                    <div className="absolute -top-2 -left-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm">
-                                        <Smartphone className="w-3 h-3" />
+                                <div className="bg-sky-50 p-4 rounded-2xl border border-sky-100 text-sm font-medium text-slate-800 leading-relaxed relative">
+                                    <div className="absolute -top-2 -left-2 w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm">
+                                        <Send className="w-3 h-3" />
                                     </div>
                                     "{reminderModal.content}"
                                 </div>
                                 <div className="flex gap-3">
                                     <button onClick={() => setReminderModal({ open: false })} className="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 text-xs">Edit Manually</button>
-                                    <button className="flex-1 py-3 rounded-xl font-bold text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-600/20 text-xs flex items-center justify-center gap-2">
-                                        <Share2 className="w-3.5 h-3.5" /> Send WhatsApp
+                                    <button className="flex-1 py-3 rounded-xl font-bold text-white bg-sky-500 hover:bg-sky-600 shadow-lg shadow-sky-600/20 text-xs flex items-center justify-center gap-2">
+                                        <Share2 className="w-3.5 h-3.5" /> Send Telegram
                                     </button>
                                 </div>
                             </div>

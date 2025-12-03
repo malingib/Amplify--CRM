@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Task, TeamMember } from '../types';
 import { Plus, MoreHorizontal, Clock, Search, Filter, X, Save, Bell, Smartphone, CalendarCheck, Loader2 } from 'lucide-react';
@@ -20,9 +19,11 @@ const teamMembers: TeamMember[] = [
 
 const Tasks: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>(initialTasks);
-    const [filter, setFilter] = useState('All');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    
+    // Filter State
+    const [priorityFilter, setPriorityFilter] = useState<'All' | 'High'>('All');
     
     // Form State
     const [newTask, setNewTask] = useState<Partial<Task>>({
@@ -74,7 +75,6 @@ const Tasks: React.FC = () => {
         // Trigger SMS API if enabled
         if (reminderEnabled && reminderPhone && reminderTime) {
             const message = `Reminder: Task "${taskToAdd.title}" is due on ${taskToAdd.dueDate}. Please ensure it is completed on time.`;
-            // Call the service without blocking the UI updates excessively, or await if we want to confirm status
             try {
                const result = await scheduleSmsReminder(reminderPhone, message, reminderTime);
                if (result.status === 'success') {
@@ -98,6 +98,8 @@ const Tasks: React.FC = () => {
         setReminderTime('');
     };
 
+    const filteredTasks = tasks.filter(t => priorityFilter === 'All' || t.priority === priorityFilter);
+
     return (
         <div className="p-6 lg:p-8 max-w-[1800px] mx-auto pb-20 h-[calc(100vh-2rem)] flex flex-col">
             {/* Header */}
@@ -111,8 +113,11 @@ const Tasks: React.FC = () => {
                         <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                         <input type="text" placeholder="Search tasks..." className="pl-10 pr-4 py-3 bg-white rounded-xl shadow-sm border border-slate-200 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none text-sm font-semibold w-64 transition-all" />
                     </div>
-                    <button className="px-5 py-3 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition flex items-center gap-2 shadow-sm hover:shadow-md hover:border-slate-300 text-sm">
-                        <Filter className="w-4 h-4" /> Filter
+                    <button 
+                        onClick={() => setPriorityFilter(priorityFilter === 'All' ? 'High' : 'All')}
+                        className={`px-5 py-3 border text-slate-700 font-semibold rounded-xl transition flex items-center gap-2 shadow-sm text-sm ${priorityFilter === 'High' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-slate-200 hover:bg-slate-50'}`}
+                    >
+                        <Filter className="w-4 h-4" /> {priorityFilter === 'High' ? 'High Priority Only' : 'Filter Priority'}
                     </button>
                     <button 
                         onClick={() => setIsAddModalOpen(true)}
@@ -132,14 +137,14 @@ const Tasks: React.FC = () => {
                                 <div className="flex items-center gap-3">
                                     <h3 className="font-bold text-sm text-slate-900 tracking-wide uppercase">{col}</h3>
                                     <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                        {tasks.filter(t => t.status === col).length}
+                                        {filteredTasks.filter(t => t.status === col).length}
                                     </span>
                                 </div>
                                 <button className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-white rounded-full transition"><MoreHorizontal className="w-4 h-4" /></button>
                             </div>
 
                             <div className="flex-1 bg-slate-100/50 rounded-[32px] p-4 space-y-4 border border-slate-200/60 overflow-y-auto custom-scrollbar">
-                                {tasks.filter(t => t.status === col).map(task => {
+                                {filteredTasks.filter(t => t.status === col).map(task => {
                                     const assignee = getAssignee(task.assigneeId);
                                     return (
                                         <div key={task.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:shadow-slate-200/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative">

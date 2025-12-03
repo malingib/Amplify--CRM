@@ -1,5 +1,4 @@
 
-
 export type UserRole = 'Admin' | 'Manager' | 'Sales' | 'Viewer' | 'SystemOwner';
 
 export enum DealStage {
@@ -9,6 +8,68 @@ export enum DealStage {
   NEGOTIATION = 'Negotiation',
   CLOSED = 'Closed',
   LOST = 'Lost'
+}
+
+export interface SystemConfig {
+  modules: {
+    leadAcquisition: boolean;
+    compliance: boolean;
+    bulkSms: boolean;
+    telegram: boolean;
+  };
+  crm: {
+    autoConvert: boolean;
+    stagnationAlertDays: number;
+    defaultView: 'board' | 'list';
+  };
+  finance: {
+    vatRate: number;
+    invoiceDueDays: number;
+    currency: string;
+  };
+  security: {
+    require2FA: boolean;
+    sessionTimeout: number; // minutes
+  };
+  notifications?: {
+    leadAssigned: { email: boolean; sms: boolean; inApp: boolean };
+    invoicePaid: { email: boolean; sms: boolean; inApp: boolean };
+    taskDue: { email: boolean; sms: boolean; inApp: boolean };
+    systemUpdate: { email: boolean; sms: boolean; inApp: boolean };
+  };
+  workspace?: {
+    companyName: string;
+    timezone: string;
+    dateFormat: string;
+    primaryColor: string;
+    kraPin?: string;
+    logoUrl?: string;
+  };
+  telegramConfig?: {
+    botToken: string;
+    chatId: string;
+    botName?: string;
+  };
+  mpesaConfig?: {
+    consumerKey: string;
+    consumerSecret: string;
+    shortcode: string;
+    passkey: string;
+  };
+  paystackConfig?: {
+    publicKey: string;
+    secretKey: string;
+  };
+  mobiwaveConfig?: {
+    apiKey: string;
+    senderId: string;
+  };
+  dashboardWidgets?: {
+    overview: boolean;
+    performance: boolean;
+    activity: boolean;
+    revenue: boolean;
+  };
 }
 
 export interface ActivityLog {
@@ -35,16 +96,26 @@ export interface Lead {
   proposalStatus?: 'None' | 'Draft' | 'Sent' | 'Accepted';
   qualificationScore?: number;
   qualificationSummary?: string;
-  source?: 'Manual' | 'AI Search' | 'AI Maps' | 'Referral';
+  source?: 'Manual' | 'AI Search' | 'AI Maps' | 'Referral' | 'WhatsApp Bot' | 'Copilot';
   socials?: {
     linkedin?: string;
     twitter?: string;
     website?: string;
+    facebook?: string;
+    instagram?: string;
   };
   address?: string;
   activityLogs?: ActivityLog[];
   growthPotential?: string;
   riskAssessment?: string;
+  
+  // Deep Insights
+  painPoints?: string[];
+  socialHighlights?: string;
+  suggestedSolution?: string;
+  engagementStrategy?: string;
+  nextSteps?: string[];
+  
   order: number;
 }
 
@@ -121,7 +192,16 @@ export interface Invoice {
   dueDate: string;
   status: 'Paid' | 'Pending' | 'Overdue';
   items: CatalogueItem[];
+  
+  // eTIMS Fields
   etimsCompliant: boolean;
+  cuSerialNumber?: string; // e.g., KRA0012345
+  etimsDate?: string;
+  qrCodeUrl?: string;
+  transmissionStatus?: 'Pending' | 'Submitted' | 'Verified' | 'Failed';
+
+  // Payment Fields
+  paymentLink?: string;
 }
 
 export interface Transaction {
@@ -151,12 +231,14 @@ export type ViewState =
   | 'pipeline' 
   | 'proposals' 
   | 'bulksms' 
+  | 'telegram'
   | 'tasks' 
   | 'settings' 
   | 'profile' 
   | 'clients' 
   | 'catalogue' 
   | 'financials' 
+  | 'compliance'
   | 'system-overview'
   | 'system-tenants'
   | 'system-financials'

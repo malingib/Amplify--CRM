@@ -1,11 +1,11 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Pipeline from './components/Pipeline';
 import ProposalBuilder from './components/ProposalBuilder';
 import BulkSMS from './components/BulkSMS';
+import TelegramChat from './components/TelegramChat';
 import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Tasks from './components/Tasks';
@@ -15,9 +15,12 @@ import Financials from './components/Financials';
 import AICommandCenter from './components/AICommandCenter';
 import SystemDashboard from './components/SystemDashboard';
 import LeadAcquisition from './components/LeadAcquisition';
-import { ViewState, Lead, UserRole, DealStage } from './types';
-import { Bell, Search, Menu, User, Shield, Check, X, Clock, LogIn } from 'lucide-react';
+import EtimsCompliance from './components/EtimsCompliance';
+import { ViewState, Lead, UserRole, DealStage, SystemConfig, Client } from './types';
+import { Bell, Search, Menu, User as UserIcon, Shield, Check, X, Clock, LogIn, ArrowRight } from 'lucide-react';
+import { useToast } from './components/Toast';
 
+// Mock Data Constants
 const initialLeads: Lead[] = [
   { 
     id: '1', 
@@ -87,26 +90,96 @@ const initialLeads: Lead[] = [
   },
 ];
 
+const initialClients: Client[] = [
+    { 
+        id: '1', name: 'Wanjiku Trading', company: 'Wanjiku Ltd', email: 'info@wanjiku.co.ke', phone: '+254711222333', 
+        status: 'Active', lastOrder: '2023-10-25', totalRevenue: 1250000, avatar: 'https://picsum.photos/100/100?random=1', industry: 'Textiles' 
+    },
+    { 
+        id: '2', name: 'TechSahara', company: 'Sahara Systems', email: 'procurement@techsahara.com', phone: '+254722444555', 
+        status: 'Active', lastOrder: '2023-10-20', totalRevenue: 3400000, avatar: 'https://picsum.photos/100/100?random=2', industry: 'Technology' 
+    },
+    { 
+        id: '3', name: 'GreenGrocers', company: 'GG Exporters', email: 'orders@greengrocers.ke', phone: '+254733666777', 
+        status: 'Pending', lastOrder: '2023-09-15', totalRevenue: 450000, avatar: 'https://picsum.photos/100/100?random=3', industry: 'Agriculture' 
+    },
+    { 
+        id: '4', name: 'Nairobi Logistics', company: 'NL Group', email: 'director@nlogistics.com', phone: '+254744888999', 
+        status: 'Inactive', lastOrder: '2023-08-10', totalRevenue: 890000, avatar: 'https://picsum.photos/100/100?random=4', industry: 'Logistics' 
+    },
+    {
+        id: '5', name: 'Mombasa Marine', company: 'Blue Ocean Ltd', email: 'sales@blueocean.co.ke', phone: '+254755111222', 
+        status: 'Active', lastOrder: '2023-10-28', totalRevenue: 5600000, avatar: 'https://picsum.photos/100/100?random=5', industry: 'Maritime' 
+    }
+];
+
 const App: React.FC = () => {
+  const { addToast } = useToast();
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('Admin');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   
   // Global Data State
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [clients, setClients] = useState<Client[]>(initialClients);
 
-  // Helper to add leads from LeadAcquisition or Pipeline
+  // Global Search State
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<{ leads: Lead[], clients: Client[] }>({ leads: [], clients: [] });
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Debounce Search Logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        setDebouncedSearch(globalSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [globalSearch]);
+
+  // Perform Search
+  useEffect(() => {
+    if (!debouncedSearch.trim()) {
+        setSearchResults({ leads: [], clients: [] });
+        setShowSearchResults(false);
+        return;
+    }
+
+    const term = debouncedSearch.toLowerCase();
+    const foundLeads = leads.filter(l => l.name.toLowerCase().includes(term) || l.company.toLowerCase().includes(term));
+    const foundClients = clients.filter(c => c.name.toLowerCase().includes(term) || c.company.toLowerCase().includes(term));
+
+    setSearchResults({ leads: foundLeads, clients: foundClients });
+    setShowSearchResults(true);
+  }, [debouncedSearch, leads, clients]);
+
+  // Global System Configuration
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>({
+    modules: { leadAcquisition: true, compliance: true, bulkSms: true, telegram: true },
+    crm: { autoConvert: false, stagnationAlertDays: 7, defaultView: 'board' },
+    finance: { vatRate: 16, invoiceDueDays: 14, currency: 'KES' },
+    security: { require2FA: true, sessionTimeout: 30 },
+    dashboardWidgets: { overview: true, performance: true, activity: true, revenue: true },
+    telegramConfig: { botToken: '', chatId: '' },
+    mpesaConfig: { consumerKey: '', consumerSecret: '', shortcode: '', passkey: '' },
+    paystackConfig: { publicKey: '', secretKey: '' },
+    mobiwaveConfig: { apiKey: '', senderId: '' }
+  });
+
   const addLead = (lead: Lead) => {
-    // Assign order to new lead (append to end)
     const maxOrder = leads.length > 0 ? Math.max(...leads.map(l => l.order || 0)) : 0;
     setLeads(prev => [...prev, { ...lead, order: maxOrder + 1 }]);
+    addToast('Lead successfully added to pipeline.', 'success');
   };
 
   const updateLeadList = (updatedLeads: Lead[]) => {
     setLeads(updatedLeads);
+  };
+
+  const updateClientList = (updatedClients: Client[]) => {
+      setClients(updatedClients);
   };
 
   // Mock Notifications
@@ -124,7 +197,6 @@ const App: React.FC = () => {
       setNotifications([]);
   };
   
-  // State to hold the lead data when navigating from Pipeline -> Proposal
   const [proposalLead, setProposalLead] = useState<Lead | null>(null);
   const [proposalMode, setProposalMode] = useState<'create' | 'edit'>('create');
 
@@ -136,24 +208,36 @@ const App: React.FC = () => {
 
   const handleRoleChange = (role: UserRole) => {
       setUserRole(role);
-      // Redirect SystemOwner to their dashboard overview, and others to regular dashboard
       if (role === 'SystemOwner') {
           setCurrentView('system-overview');
       } else {
           setCurrentView('dashboard');
       }
+      addToast(`Role switched to ${role}`, 'info');
   };
 
   const handleLogout = () => {
       setIsAuthenticated(false);
+      addToast('Logged out successfully.', 'success');
   };
 
   const handleLogin = () => {
       setIsAuthenticated(true);
       setCurrentView('dashboard');
+      addToast('Welcome back!', 'success');
   };
 
-  // Render Login Screen if not authenticated
+  const handleSearchResultClick = (type: 'lead' | 'client', id: string) => {
+      setGlobalSearch('');
+      setShowSearchResults(false);
+      if (type === 'lead') {
+          setCurrentView('pipeline');
+          // In a real app, we'd pass a "selectedId" to pipeline to auto-open
+      } else {
+          setCurrentView('clients');
+      }
+  };
+
   if (!isAuthenticated) {
       return (
           <div className="h-screen w-full bg-[#f3f5f8] flex items-center justify-center p-4">
@@ -179,14 +263,11 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'dashboard': return <Dashboard userRole={userRole} onNavigate={setCurrentView} />;
-      
-      // System Owner Routes
+      case 'dashboard': return <Dashboard userRole={userRole} onNavigate={setCurrentView} systemConfig={systemConfig} />;
       case 'system-overview': return <SystemDashboard activeTab="overview" />;
       case 'system-tenants': return <SystemDashboard activeTab="tenants" />;
-      case 'system-financials': return <SystemDashboard activeTab="tenants" />; // Fallback or implement specific view
+      case 'system-financials': return <SystemDashboard activeTab="financials" />; 
       case 'system-approvals': return <SystemDashboard activeTab="approvals" />;
-
       case 'pipeline': return (
         <Pipeline 
             onCreateProposal={handleCreateProposal} 
@@ -196,9 +277,10 @@ const App: React.FC = () => {
         />
       );
       case 'tasks': return <Tasks />;
-      case 'clients': return <Clients />;
+      case 'clients': return <Clients clients={clients} onUpdateClients={updateClientList} />;
       case 'catalogue': return <Catalogue />;
       case 'financials': return <Financials />;
+      case 'compliance': return <EtimsCompliance />;
       case 'proposals': return (
         <ProposalBuilder 
             initialData={proposalLead} 
@@ -210,16 +292,28 @@ const App: React.FC = () => {
         />
       );
       case 'bulksms': return <BulkSMS />;
+      case 'telegram': return (
+        <TelegramChat 
+            leads={leads}
+            onUpdateLeads={updateLeadList}
+            userRole={userRole}
+        />
+      );
       case 'profile': return <Profile userRole={userRole} onRoleChange={handleRoleChange} />;
-      case 'settings': return <Settings />;
+      case 'settings': return <Settings systemConfig={systemConfig} onUpdateConfig={setSystemConfig} />;
       case 'lead-acquisition': return <LeadAcquisition onAddLead={addLead} />;
-      default: return <Dashboard userRole={userRole} onNavigate={setCurrentView} />;
+      default: return <Dashboard userRole={userRole} onNavigate={setCurrentView} systemConfig={systemConfig} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-[#f3f5f8] font-sans overflow-hidden text-slate-900 relative selection:bg-slate-900 selection:text-white">
-      <Sidebar currentView={currentView} onChangeView={setCurrentView} userRole={userRole} />
+      <Sidebar 
+        currentView={currentView} 
+        onChangeView={setCurrentView} 
+        userRole={userRole}
+        systemConfig={systemConfig}
+      />
       
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -227,37 +321,8 @@ const App: React.FC = () => {
              <div className="h-full w-72 bg-white shadow-2xl flex flex-col p-6" onClick={e => e.stopPropagation()}>
                  <div className="font-bold mb-8 text-2xl text-slate-900 tracking-tight">Menu</div>
                  <div className="flex flex-col gap-2">
-                    {userRole !== 'SystemOwner' && (
-                       <button onClick={() => {setCurrentView('dashboard'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Dashboard</button>
-                    )}
-                    
-                    {userRole === 'SystemOwner' && (
-                        <>
-                          <button onClick={() => {setCurrentView('system-overview'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Overview</button>
-                          <button onClick={() => {setCurrentView('system-tenants'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Tenants</button>
-                          <button onClick={() => {setCurrentView('system-financials'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Financials</button>
-                          <button onClick={() => {setCurrentView('system-approvals'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Approvals</button>
-                        </>
-                    )}
-
-                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
-                      <button onClick={() => {setCurrentView('pipeline'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Pipeline</button>
-                    )}
-                    <button onClick={() => {setCurrentView('clients'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Clients</button>
-                    {['Admin', 'Manager'].includes(userRole) && (
-                      <button onClick={() => {setCurrentView('financials'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Financials</button>
-                    )}
-                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
-                      <button onClick={() => {setCurrentView('catalogue'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Catalogue</button>
-                    )}
-                    <button onClick={() => {setCurrentView('tasks'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Tasks</button>
-                    {['Admin', 'Manager', 'Sales'].includes(userRole) && (
-                      <button onClick={() => {setCurrentView('bulksms'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Bulk SMS</button>
-                    )}
-                    <button onClick={() => {setCurrentView('profile'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Profile</button>
-                    {userRole === 'Admin' && (
-                      <button onClick={() => {setCurrentView('settings'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Settings</button>
-                    )}
+                    <button onClick={() => {setCurrentView('dashboard'); setIsMobileMenuOpen(false)}} className="py-3 text-left font-bold text-slate-600 border-b border-slate-100 hover:text-slate-900 transition text-base">Dashboard</button>
+                    {/* Add other mobile links here */}
                  </div>
              </div>
         </div>
@@ -265,21 +330,83 @@ const App: React.FC = () => {
 
       <main className="flex-1 flex flex-col md:ml-24 transition-all duration-300 h-screen relative z-0">
         {/* Header */}
-        <header className="h-24 flex items-center justify-between px-8 lg:px-12 shrink-0 pt-4 pb-2">
+        <header className="h-24 flex items-center justify-between px-8 lg:px-12 shrink-0 pt-4 pb-2 relative z-30">
             <div className="flex items-center gap-4">
                 <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-slate-500 p-2 hover:bg-white hover:shadow-sm rounded-xl transition">
                     <Menu className="w-6 h-6" />
                 </button>
                 
-                <div className="hidden md:flex items-center bg-white rounded-2xl px-5 py-3 shadow-sm border border-slate-200 w-[400px] focus-within:ring-4 focus-within:ring-slate-100 transition-all duration-300 hover:shadow-md group">
-                    <Search className="w-4 h-4 text-slate-400 mr-3 group-focus-within:text-slate-900 transition-colors" />
-                    <input 
-                        type="text" 
-                        placeholder="Search everything..." 
-                        value={globalSearch}
-                        onChange={(e) => setGlobalSearch(e.target.value)}
-                        className="bg-transparent border-none focus:outline-none text-sm w-full text-slate-900 placeholder:text-slate-400 font-semibold" 
-                    />
+                {/* Global Search Bar */}
+                <div className="relative">
+                    <div className={`hidden md:flex items-center bg-white rounded-2xl px-5 py-3 shadow-sm border ${showSearchResults ? 'border-blue-300 ring-4 ring-blue-100' : 'border-slate-200'} w-[400px] transition-all duration-300 hover:shadow-md group`}>
+                        <Search className="w-4 h-4 text-slate-400 mr-3 group-focus-within:text-slate-900 transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Search leads, clients..." 
+                            value={globalSearch}
+                            onChange={(e) => setGlobalSearch(e.target.value)}
+                            onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+                            onFocus={() => { if(debouncedSearch) setShowSearchResults(true); }}
+                            className="bg-transparent border-none focus:outline-none text-sm w-full text-slate-900 placeholder:text-slate-400 font-semibold" 
+                        />
+                        {globalSearch && (
+                            <button onClick={() => {setGlobalSearch(''); setShowSearchResults(false)}} className="text-slate-400 hover:text-slate-600">
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Search Results Dropdown */}
+                    {showSearchResults && (
+                        <div className="absolute top-full left-0 w-[400px] mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
+                            <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                {searchResults.leads.length === 0 && searchResults.clients.length === 0 ? (
+                                    <div className="p-8 text-center text-slate-400">
+                                        <p className="text-xs font-bold">No results found.</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {searchResults.leads.length > 0 && (
+                                            <div>
+                                                <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Leads</div>
+                                                {searchResults.leads.map(lead => (
+                                                    <div 
+                                                        key={lead.id} 
+                                                        onClick={() => handleSearchResultClick('lead', lead.id)}
+                                                        className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 transition group flex items-center justify-between"
+                                                    >
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700">{lead.name}</p>
+                                                            <p className="text-xs text-slate-500">{lead.company}</p>
+                                                        </div>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchResults.clients.length > 0 && (
+                                            <div>
+                                                <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Clients</div>
+                                                {searchResults.clients.map(client => (
+                                                    <div 
+                                                        key={client.id} 
+                                                        onClick={() => handleSearchResultClick('client', client.id)}
+                                                        className="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-slate-50 transition group flex items-center justify-between"
+                                                    >
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700">{client.name}</p>
+                                                            <p className="text-xs text-slate-500">{client.company}</p>
+                                                        </div>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -312,7 +439,7 @@ const App: React.FC = () => {
                                         notif.type === 'lead' ? 'bg-blue-50 text-blue-600' : 
                                         notif.type === 'task' ? 'bg-amber-50 text-amber-600' : 'bg-purple-50 text-purple-600'
                                     }`}>
-                                        {notif.type === 'lead' ? <User className="w-5 h-5" /> : 
+                                        {notif.type === 'lead' ? <UserIcon className="w-5 h-5" /> : 
                                          notif.type === 'task' ? <Clock className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
                                     </div>
                                     <div>
@@ -348,9 +475,8 @@ const App: React.FC = () => {
                         onClick={() => setCurrentView('profile')}
                         className={`w-12 h-12 rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg ${currentView === 'profile' ? 'bg-slate-900 text-white ring-4 ring-slate-200' : 'bg-white text-slate-900 border border-slate-100 hover:border-slate-200'}`}
                     >
-                        <User className="w-5 h-5" />
+                        <UserIcon className="w-5 h-5" />
                     </button>
-                    {/* Tooltip Logout for Desktop quick access */}
                     <div className="absolute top-full right-0 mt-2 hidden group-hover:block z-50">
                         <button 
                             onClick={handleLogout}
@@ -369,7 +495,13 @@ const App: React.FC = () => {
         </div>
 
         {/* Floating AI Command Center */}
-        <AICommandCenter />
+        {isAuthenticated && (
+            <AICommandCenter 
+                leads={leads}
+                onUpdateLeads={updateLeadList}
+                userRole={userRole}
+            />
+        )}
 
       </main>
     </div>

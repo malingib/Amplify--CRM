@@ -1,71 +1,9 @@
 
 import React, { useState } from 'react';
 import { Client } from '../types';
-import { Search, Filter, Plus, MoreHorizontal, Mail, Phone, ArrowUpRight, Download, Building2, MapPin, X, Save, Trash2, CheckSquare, Square, MessageSquare, Send, Calendar, Loader2, Clock, FileText, CreditCard, ChevronRight, Briefcase, History, Receipt } from 'lucide-react';
+import { Search, Filter, Plus, Mail, Phone, Download, Building2, MapPin, X, Save, Trash2, CheckSquare, Square, MessageSquare, Send, Calendar, Loader2, Clock, FileText, CreditCard, ChevronRight, Briefcase, History, Receipt } from 'lucide-react';
 import { sendBulkSms } from '../services/smsService';
-
-const initialClients: Client[] = [
-    { 
-        id: '1', 
-        name: 'Wanjiku Trading', 
-        company: 'Wanjiku Ltd', 
-        email: 'info@wanjiku.co.ke',
-        phone: '+254711222333',
-        status: 'Active',
-        lastOrder: '2023-10-25',
-        totalRevenue: 1250000,
-        avatar: 'https://picsum.photos/100/100?random=1',
-        industry: 'Textiles'
-    },
-    { 
-        id: '2', 
-        name: 'TechSahara', 
-        company: 'Sahara Systems', 
-        email: 'procurement@techsahara.com',
-        phone: '+254722444555',
-        status: 'Active',
-        lastOrder: '2023-10-20',
-        totalRevenue: 3400000,
-        avatar: 'https://picsum.photos/100/100?random=2',
-        industry: 'Technology'
-    },
-    { 
-        id: '3', 
-        name: 'GreenGrocers', 
-        company: 'GG Exporters', 
-        email: 'orders@greengrocers.ke',
-        phone: '+254733666777',
-        status: 'Pending',
-        lastOrder: '2023-09-15',
-        totalRevenue: 450000,
-        avatar: 'https://picsum.photos/100/100?random=3',
-        industry: 'Agriculture'
-    },
-    { 
-        id: '4', 
-        name: 'Nairobi Logistics', 
-        company: 'NL Group', 
-        email: 'director@nlogistics.com',
-        phone: '+254744888999',
-        status: 'Inactive',
-        lastOrder: '2023-08-10',
-        totalRevenue: 890000,
-        avatar: 'https://picsum.photos/100/100?random=4',
-        industry: 'Logistics'
-    },
-    {
-        id: '5',
-        name: 'Mombasa Marine',
-        company: 'Blue Ocean Ltd',
-        email: 'sales@blueocean.co.ke',
-        phone: '+254755111222',
-        status: 'Active',
-        lastOrder: '2023-10-28',
-        totalRevenue: 5600000,
-        avatar: 'https://picsum.photos/100/100?random=5',
-        industry: 'Maritime'
-    }
-];
+import { useToast } from './Toast';
 
 // Mock History Data linked to Client IDs
 const mockClientHistory = [
@@ -80,8 +18,13 @@ const mockClientHistory = [
 
 const industries = ['Technology', 'Agriculture', 'Logistics', 'Maritime', 'Textiles', 'Retail', 'Manufacturing', 'Finance', 'General'];
 
-const Clients: React.FC = () => {
-    const [clients, setClients] = useState<Client[]>(initialClients);
+interface ClientsProps {
+    clients: Client[];
+    onUpdateClients: (clients: Client[]) => void;
+}
+
+const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
+    const { addToast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newClient, setNewClient] = useState<Partial<Client>>({
@@ -100,13 +43,22 @@ const Clients: React.FC = () => {
     const [scheduleTime, setScheduleTime] = useState('');
     const [isSending, setIsSending] = useState(false);
 
-    const filteredClients = clients.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.company.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter State
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [industryFilter, setIndustryFilter] = useState('All');
+
+    const filteredClients = clients.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              c.company.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesIndustry = industryFilter === 'All' || c.industry === industryFilter;
+        return matchesSearch && matchesIndustry;
+    });
 
     const handleAddClient = () => {
-        if (!newClient.name || !newClient.company) return;
+        if (!newClient.name || !newClient.company) {
+            addToast('Name and Company are required.', 'error');
+            return;
+        }
         const clientToAdd: Client = {
             id: Date.now().toString(),
             name: newClient.name!,
@@ -119,9 +71,10 @@ const Clients: React.FC = () => {
             avatar: `https://picsum.photos/100/100?random=${Math.floor(Math.random() * 100)}`,
             industry: newClient.industry || 'General'
         };
-        setClients([...clients, clientToAdd]);
+        onUpdateClients([...clients, clientToAdd]);
         setIsAddModalOpen(false);
         setNewClient({ name: '', company: '', email: '', phone: '', status: 'Active', totalRevenue: 0, industry: 'General' });
+        addToast('Client added successfully.', 'success');
     };
 
     const handleExport = () => {
@@ -135,11 +88,12 @@ const Clients: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        addToast('Export started.', 'info');
     };
 
     const handleDelete = (id: string) => {
         if (confirm("Are you sure you want to remove this client?")) {
-            setClients(clients.filter(c => c.id !== id));
+            onUpdateClients(clients.filter(c => c.id !== id));
             if (selectedClientIds.has(id)) {
                 const newSet = new Set(selectedClientIds);
                 newSet.delete(id);
@@ -148,6 +102,7 @@ const Clients: React.FC = () => {
             if (viewingClient?.id === id) {
                 setViewingClient(null);
             }
+            addToast('Client removed.', 'success');
         }
     };
 
@@ -179,11 +134,14 @@ const Clients: React.FC = () => {
             .map(c => c.phone);
         
         if (recipients.length > 0) {
-            await sendBulkSms(recipients, smsMessage, scheduleTime || undefined);
-            // Simulate success feedback
-            alert(`Campaign scheduled for ${recipients.length} clients.`);
+            try {
+                await sendBulkSms(recipients, smsMessage, scheduleTime || undefined);
+                addToast(`Campaign scheduled for ${recipients.length} clients.`, 'success');
+            } catch (e) {
+                addToast('Failed to send SMS.', 'error');
+            }
         } else {
-            alert('No valid phone numbers found for selected clients.');
+            addToast('No valid phone numbers found for selected clients.', 'error');
         }
 
         setIsSending(false);
@@ -249,9 +207,36 @@ const Clients: React.FC = () => {
                         </button>
                     ))}
                 </div>
-                <button className="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition ml-auto">
-                    <Filter className="w-4 h-4" />
-                </button>
+                
+                {/* Industry Filter Button */}
+                <div className="relative">
+                    <button 
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className={`p-3 rounded-xl border transition flex items-center gap-2 text-sm font-bold ${isFilterOpen || industryFilter !== 'All' ? 'bg-slate-100 border-slate-300 text-slate-900' : 'border-slate-200 hover:bg-slate-50 text-slate-500'}`}
+                    >
+                        <Filter className="w-4 h-4" /> 
+                        {industryFilter !== 'All' && <span className="text-xs bg-slate-200 px-1.5 py-0.5 rounded-md text-slate-800">{industryFilter}</span>}
+                    </button>
+                    
+                    {isFilterOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-50 p-2 animate-in fade-in slide-in-from-top-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 py-1.5">Filter by Industry</p>
+                            <button onClick={() => { setIndustryFilter('All'); setIsFilterOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${industryFilter === 'All' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                All Industries
+                            </button>
+                            <div className="h-px bg-slate-100 my-1"></div>
+                            {industries.map(ind => (
+                                <button 
+                                    key={ind} 
+                                    onClick={() => { setIndustryFilter(ind); setIsFilterOpen(false); }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${industryFilter === ind ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    {ind}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Client List */}
@@ -277,7 +262,7 @@ const Clients: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredClients.map((client) => (
+                            {filteredClients.length > 0 ? filteredClients.map((client) => (
                                 <tr 
                                     key={client.id} 
                                     className={`hover:bg-slate-50/60 transition duration-200 group cursor-pointer ${selectedClientIds.has(client.id) ? 'bg-slate-50' : ''}`}
@@ -353,7 +338,13 @@ const Clients: React.FC = () => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">
+                                        No clients found matching your filters.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

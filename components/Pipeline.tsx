@@ -1,9 +1,14 @@
 
 
+
+
+
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { DealStage, Lead, ActivityLog } from '../types';
-import { MoreHorizontal, Phone, Plus, ArrowRight, Search, X, Mail, MessageSquare, MapPin, Sparkles, BrainCircuit, LayoutGrid, List as ListIcon, Save, GripVertical, Trash2, Edit2, Archive, DollarSign, UserCircle, Calendar, Filter, Ban, CheckCircle2, Briefcase } from 'lucide-react';
-import { qualifyLead } from '../services/geminiService';
+import { MoreHorizontal, Phone, Plus, ArrowRight, Search, X, Mail, MessageSquare, MapPin, Sparkles, BrainCircuit, LayoutGrid, List as ListIcon, Save, GripVertical, Trash2, Edit2, Archive, DollarSign, UserCircle, Calendar, Filter, Ban, CheckCircle2, Briefcase, Linkedin, Facebook, Instagram, Globe, Twitter, AlertTriangle, TrendingUp, Copy, Loader2 } from 'lucide-react';
+import { qualifyLead, generateFollowUpStrategy } from '../services/geminiService';
 
 interface PipelineProps {
     leads: Lead[];
@@ -41,6 +46,10 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
   
   // Activity Logging State
   const [newActivityNote, setNewActivityNote] = useState('');
+
+  // AI Follow Up State
+  const [isGeneratingFollowUp, setIsGeneratingFollowUp] = useState(false);
+  const [followUpStrategy, setFollowUpStrategy] = useState<any>(null);
 
   // Define Kanban Columns
   const kanbanStages = [DealStage.INTAKE, DealStage.QUALIFIED, DealStage.PROPOSAL, DealStage.NEGOTIATION, DealStage.CLOSED];
@@ -90,6 +99,20 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
   }, [filteredLeads, kanbanStages]);
 
   // --- Actions ---
+
+  const handleGenerateFollowUp = async () => {
+      if (!selectedLead) return;
+      setIsGeneratingFollowUp(true);
+      const strategy = await generateFollowUpStrategy(
+          selectedLead.name, 
+          selectedLead.company, 
+          selectedLead.stage, 
+          selectedLead.lastContact, 
+          selectedLead.notes || ''
+      );
+      setFollowUpStrategy(strategy);
+      setIsGeneratingFollowUp(false);
+  };
 
   const moveLead = async (id: string, targetStage: DealStage) => {
       if (targetStage === DealStage.LOST && !confirm("Mark this deal as Lost?")) return;
@@ -294,6 +317,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
       
       {/* Header & Controls */}
       <div className="flex flex-col gap-6 mb-6 shrink-0">
+          {/* ... existing header code ... */}
           <div className="flex justify-between items-end">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Deals Pipeline</h2>
@@ -470,15 +494,16 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                                 onDragStart={(e) => handleDragStart(e, lead.id)}
                                                 onDragOver={(e) => handleDragOverLead(e, lead.id)}
                                                 onClick={() => setSelectedLead(lead)}
-                                                className={`bg-white p-4 rounded-2xl shadow-sm border cursor-grab active:cursor-grabbing hover:shadow-lg transition-all duration-300 group relative ${
+                                                className={`bg-white p-4 rounded-2xl shadow-sm border cursor-pointer hover:shadow-lg transition-all duration-300 group relative ${
                                                     draggedLeadId === lead.id ? 'opacity-50' : 'opacity-100'
                                                 } ${
                                                     dragOverLeadId === lead.id ? 'border-t-4 border-t-blue-500 mt-2' : 'border-slate-200'
                                                 }`}
                                             >
+                                                {/* ... lead card content ... */}
                                                 <div className="flex justify-between items-start mb-3">
                                                     <div className="flex items-center gap-3">
-                                                        <GripVertical className="w-4 h-4 text-slate-300 cursor-grab" />
+                                                        <GripVertical className="w-4 h-4 text-slate-300 cursor-grab active:cursor-grabbing" />
                                                         <div>
                                                             <h4 className="font-bold text-slate-900 text-sm truncate w-[160px]">{lead.name}</h4>
                                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">{lead.company}</span>
@@ -580,6 +605,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
             <div className="h-full bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                 <div className="overflow-y-auto custom-scrollbar flex-1">
                     <table className="w-full text-left border-collapse">
+                        {/* ... existing table code ... */}
                         <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 backdrop-blur-sm z-10">
                             <tr>
                                 <th className="px-6 py-4">Deal Name</th>
@@ -641,6 +667,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
       {/* --- ADD DEAL MODAL --- */}
       {isAddModalOpen && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
+              {/* ... existing modal code ... */}
               <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                   <button onClick={closeModal} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                   <div className="mb-6">
@@ -648,6 +675,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                       <p className="text-slate-500 font-medium mt-1 text-sm">Enter deal details to track in pipeline.</p>
                   </div>
                   <div className="space-y-4">
+                      {/* ... form fields ... */}
                       <div>
                           <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Deal Name</label>
                           <input type="text" value={newDeal.name} onChange={e => setNewDeal({...newDeal, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none text-sm focus:ring-2 focus:ring-blue-100" placeholder="e.g. Annual Service Contract" />
@@ -777,7 +805,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
+                            {/* ... contact details ... */}
+                             <div className="space-y-4">
                                 <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest">Contact Info</h3>
                                 <div className="space-y-3 text-sm">
                                     <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -792,6 +821,25 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                         <MapPin className="w-4 h-4 text-slate-400" />
                                         <span className="font-medium text-slate-700">{selectedLead.address || 'Nairobi, Kenya'}</span>
                                     </div>
+                                    {selectedLead.socials && Object.keys(selectedLead.socials).length > 0 && (
+                                        <div className="flex gap-2 pt-2">
+                                            {selectedLead.socials.linkedin && selectedLead.socials.linkedin !== 'N/A' && (
+                                                <a href={selectedLead.socials.linkedin} target="_blank" rel="noreferrer" className="p-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition border border-blue-100"><Linkedin className="w-4 h-4" /></a>
+                                            )}
+                                            {selectedLead.socials.twitter && selectedLead.socials.twitter !== 'N/A' && (
+                                                <a href={selectedLead.socials.twitter} target="_blank" rel="noreferrer" className="p-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition border border-slate-200"><Twitter className="w-4 h-4" /></a>
+                                            )}
+                                            {selectedLead.socials.facebook && selectedLead.socials.facebook !== 'N/A' && (
+                                                <a href={selectedLead.socials.facebook} target="_blank" rel="noreferrer" className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition border border-blue-100"><Facebook className="w-4 h-4" /></a>
+                                            )}
+                                            {selectedLead.socials.instagram && selectedLead.socials.instagram !== 'N/A' && (
+                                                <a href={selectedLead.socials.instagram} target="_blank" rel="noreferrer" className="p-2 bg-pink-50 text-pink-600 rounded-lg hover:bg-pink-100 transition border border-pink-100"><Instagram className="w-4 h-4" /></a>
+                                            )}
+                                            {selectedLead.socials.website && selectedLead.socials.website !== 'N/A' && (
+                                                <a href={selectedLead.socials.website} target="_blank" rel="noreferrer" className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition border border-slate-200"><Globe className="w-4 h-4" /></a>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -815,7 +863,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                     {/* TIMELINE TAB */}
                     {activeDetailTab === 'timeline' && (
                         <div className="space-y-6">
-                            {/* Input Area */}
+                            {/* ... existing timeline code ... */}
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                                 <textarea 
                                     value={newActivityNote}
@@ -883,6 +931,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                     {/* AI TAB */}
                     {activeDetailTab === 'ai' && (
                          <div className="space-y-6">
+                            {/* Qualification Card */}
                             {selectedLead.qualificationScore !== undefined ? (
                                 <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-lg shadow-slate-900/20 relative overflow-hidden">
                                     <div className="relative z-10">
@@ -898,7 +947,6 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                             {selectedLead.qualificationSummary}
                                         </p>
                                     </div>
-                                    {/* Decorative Blob */}
                                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
                                 </div>
                             ) : (
@@ -910,19 +958,89 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                 </div>
                             )}
 
-                            <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                                <h4 className="font-bold text-slate-900 text-sm mb-3">Suggested Next Actions</h4>
-                                <ul className="space-y-3">
-                                    <li className="flex items-start gap-3 text-xs text-slate-600">
-                                        <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">1</div>
-                                        <span>Schedule a follow-up meeting to discuss timeline constraints.</span>
-                                    </li>
-                                    <li className="flex items-start gap-3 text-xs text-slate-600">
-                                        <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">2</div>
-                                        <span>Send case studies relevant to their industry.</span>
-                                    </li>
-                                </ul>
+                            {/* Automated Follow-Up Generator */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                        <MessageSquare className="w-4 h-4 text-emerald-500" />
+                                        Smart Follow-Up
+                                    </h4>
+                                    {!followUpStrategy && (
+                                        <button 
+                                            onClick={handleGenerateFollowUp}
+                                            disabled={isGeneratingFollowUp}
+                                            className="px-3 py-1.5 bg-slate-50 hover:bg-emerald-50 text-emerald-600 border border-slate-200 hover:border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+                                        >
+                                            {isGeneratingFollowUp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                                            Generate
+                                        </button>
+                                    )}
+                                </div>
+
+                                {followUpStrategy ? (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                            <p className="text-[10px] font-bold text-blue-500 uppercase mb-1">Recommended Action</p>
+                                            <p className="font-bold text-slate-900 text-sm">{followUpStrategy.suggested_action}</p>
+                                            <p className="text-xs text-slate-600 mt-1">{followUpStrategy.rationale}</p>
+                                        </div>
+                                        
+                                        {followUpStrategy.email_draft && (
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">Email Draft</p>
+                                                    <button className="text-slate-400 hover:text-slate-600"><Copy className="w-3 h-3" /></button>
+                                                </div>
+                                                <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 leading-relaxed border border-slate-100">
+                                                    {followUpStrategy.email_draft}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {followUpStrategy.sms_draft && (
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">WhatsApp / SMS</p>
+                                                    <button className="text-slate-400 hover:text-slate-600"><Copy className="w-3 h-3" /></button>
+                                                </div>
+                                                <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600 leading-relaxed border border-slate-100">
+                                                    {followUpStrategy.sms_draft}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <button onClick={() => setFollowUpStrategy(null)} className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600">Reset Strategy</button>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-slate-400 text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                        Generate a personalized engagement strategy based on deal stage and history.
+                                    </p>
+                                )}
                             </div>
+
+                            {/* Insights */}
+                            {(selectedLead.growthPotential || selectedLead.riskAssessment) && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    {selectedLead.growthPotential && (
+                                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <TrendingUp className="w-4 h-4 text-blue-600" />
+                                                <h4 className="font-bold text-blue-900 text-xs uppercase tracking-wider">Growth</h4>
+                                            </div>
+                                            <p className="text-sm font-medium text-blue-800 leading-relaxed">{selectedLead.growthPotential}</p>
+                                        </div>
+                                    )}
+                                    {selectedLead.riskAssessment && (
+                                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                                <h4 className="font-bold text-amber-900 text-xs uppercase tracking-wider">Risk</h4>
+                                            </div>
+                                            <p className="text-sm font-medium text-amber-800 leading-relaxed">{selectedLead.riskAssessment}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                          </div>
                     )}
 
