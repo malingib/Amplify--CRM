@@ -16,8 +16,8 @@ import AICommandCenter from './components/AICommandCenter';
 import SystemDashboard from './components/SystemDashboard';
 import LeadAcquisition from './components/LeadAcquisition';
 import EtimsCompliance from './components/EtimsCompliance';
-import { ViewState, Lead, UserRole, DealStage, SystemConfig, Client } from './types';
-import { Bell, Search, Menu, User as UserIcon, Shield, Check, X, Clock, LogIn, ArrowRight } from 'lucide-react';
+import { ViewState, Lead, UserRole, DealStage, SystemConfig, Client, CatalogueItem } from './types';
+import { Bell, Search, Menu, User as UserIcon, Shield, Check, X, Clock, LogIn, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useToast } from './components/Toast';
 
 // Mock Data Constants
@@ -113,6 +113,12 @@ const initialClients: Client[] = [
     }
 ];
 
+const initialCatalogueItems: CatalogueItem[] = [
+  { id: '1', name: 'CRM Implementation', description: 'Full setup and team onboarding for 10 users.', price: 150000, category: 'Service', status: 'Active', sku: 'SVC-CRM-001' },
+  { id: '2', name: 'Annual Maintenance', description: 'Yearly support contract and updates.', price: 50000, category: 'Service', status: 'Active', sku: 'SVC-MNT-002' },
+  { id: '3', name: 'POS Hardware Bundle', description: 'Touchscreen terminal, printer, and scanner.', price: 85000, category: 'Product', status: 'Active', sku: 'HRD-POS-001', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=100' },
+];
+
 const App: React.FC = () => {
   const { addToast } = useToast();
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
@@ -124,11 +130,12 @@ const App: React.FC = () => {
   // Global Data State
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [clients, setClients] = useState<Client[]>(initialClients);
+  const [catalogueItems, setCatalogueItems] = useState<CatalogueItem[]>(initialCatalogueItems);
 
   // Global Search State
   const [globalSearch, setGlobalSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<{ leads: Lead[], clients: Client[] }>({ leads: [], clients: [] });
+  const [searchResults, setSearchResults] = useState<{ leads: Lead[], clients: Client[], catalogue: CatalogueItem[] }>({ leads: [], clients: [], catalogue: [] });
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   // Debounce Search Logic
@@ -142,7 +149,7 @@ const App: React.FC = () => {
   // Perform Search
   useEffect(() => {
     if (!debouncedSearch.trim()) {
-        setSearchResults({ leads: [], clients: [] });
+        setSearchResults({ leads: [], clients: [], catalogue: [] });
         setShowSearchResults(false);
         return;
     }
@@ -150,10 +157,11 @@ const App: React.FC = () => {
     const term = debouncedSearch.toLowerCase();
     const foundLeads = leads.filter(l => l.name.toLowerCase().includes(term) || l.company.toLowerCase().includes(term));
     const foundClients = clients.filter(c => c.name.toLowerCase().includes(term) || c.company.toLowerCase().includes(term));
+    const foundCatalogue = catalogueItems.filter(i => i.name.toLowerCase().includes(term) || i.description.toLowerCase().includes(term) || i.sku?.toLowerCase().includes(term));
 
-    setSearchResults({ leads: foundLeads, clients: foundClients });
+    setSearchResults({ leads: foundLeads, clients: foundClients, catalogue: foundCatalogue });
     setShowSearchResults(true);
-  }, [debouncedSearch, leads, clients]);
+  }, [debouncedSearch, leads, clients, catalogueItems]);
 
   // Global System Configuration
   const [systemConfig, setSystemConfig] = useState<SystemConfig>({
@@ -180,6 +188,10 @@ const App: React.FC = () => {
 
   const updateClientList = (updatedClients: Client[]) => {
       setClients(updatedClients);
+  };
+
+  const updateCatalogueList = (updatedItems: CatalogueItem[]) => {
+      setCatalogueItems(updatedItems);
   };
 
   // Mock Notifications
@@ -227,12 +239,14 @@ const App: React.FC = () => {
       addToast('Welcome back!', 'success');
   };
 
-  const handleSearchResultClick = (type: 'lead' | 'client', id: string) => {
+  const handleSearchResultClick = (type: 'lead' | 'client' | 'catalogue', id: string) => {
       setGlobalSearch('');
       setShowSearchResults(false);
       if (type === 'lead') {
           setCurrentView('pipeline');
           // In a real app, we'd pass a "selectedId" to pipeline to auto-open
+      } else if (type === 'catalogue') {
+          setCurrentView('catalogue');
       } else {
           setCurrentView('clients');
       }
@@ -278,7 +292,7 @@ const App: React.FC = () => {
       );
       case 'tasks': return <Tasks />;
       case 'clients': return <Clients clients={clients} onUpdateClients={updateClientList} />;
-      case 'catalogue': return <Catalogue />;
+      case 'catalogue': return <Catalogue items={catalogueItems} onUpdateItems={updateCatalogueList} />;
       case 'financials': return <Financials />;
       case 'compliance': return <EtimsCompliance />;
       case 'proposals': return (
@@ -342,7 +356,7 @@ const App: React.FC = () => {
                         <Search className="w-4 h-4 text-slate-400 mr-3 group-focus-within:text-slate-900 transition-colors" />
                         <input 
                             type="text" 
-                            placeholder="Search leads, clients..." 
+                            placeholder="Search leads, clients, items..." 
                             value={globalSearch}
                             onChange={(e) => setGlobalSearch(e.target.value)}
                             onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
@@ -360,7 +374,7 @@ const App: React.FC = () => {
                     {showSearchResults && (
                         <div className="absolute top-full left-0 w-[400px] mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
                             <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                                {searchResults.leads.length === 0 && searchResults.clients.length === 0 ? (
+                                {searchResults.leads.length === 0 && searchResults.clients.length === 0 && searchResults.catalogue.length === 0 ? (
                                     <div className="p-8 text-center text-slate-400">
                                         <p className="text-xs font-bold">No results found.</p>
                                     </div>
@@ -398,6 +412,29 @@ const App: React.FC = () => {
                                                             <p className="text-xs text-slate-500">{client.company}</p>
                                                         </div>
                                                         <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-500 opacity-0 group-hover:opacity-100 transition-all" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {searchResults.catalogue.length > 0 && (
+                                            <div>
+                                                <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Catalogue</div>
+                                                {searchResults.catalogue.map(item => (
+                                                    <div 
+                                                        key={item.id} 
+                                                        onClick={() => handleSearchResultClick('catalogue', item.id)}
+                                                        className="px-4 py-3 hover:bg-purple-50 cursor-pointer border-b border-slate-50 transition group flex items-center justify-between"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                                                                <ShoppingBag className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-bold text-slate-900 group-hover:text-purple-700">{item.name}</p>
+                                                                <p className="text-xs text-slate-500 font-bold">KES {item.price.toLocaleString()}</p>
+                                                            </div>
+                                                        </div>
+                                                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-purple-500 opacity-0 group-hover:opacity-100 transition-all" />
                                                     </div>
                                                 ))}
                                             </div>

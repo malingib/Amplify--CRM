@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { LayoutDashboard, Kanban, MessageSquare, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote, ShieldCheck, Building2, FileText, PieChart, Send, FileCheck } from 'lucide-react';
 import { ViewState, UserRole, SystemConfig } from '../types';
@@ -89,7 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, 
 
       {/* Bottom Actions */}
       <div className="flex flex-col gap-6 px-3 w-full">
-        {userRole !== 'SystemOwner' && systemConfig.modules.leadAcquisition && (
+        {['Admin', 'Manager', 'Sales'].includes(userRole) && systemConfig.modules.leadAcquisition && (
           <button 
             onClick={() => onChangeView('lead-acquisition')}
             className={`w-full aspect-square flex items-center justify-center rounded-full transition-all duration-300 ${

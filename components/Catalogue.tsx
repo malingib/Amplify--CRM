@@ -1,17 +1,15 @@
 
 import React, { useState } from 'react';
 import { CatalogueItem } from '../types';
-import { Search, Plus, Filter, MoreHorizontal, Globe, Sparkles, Tag, Package, CheckCircle2, X, Loader2, ArrowRight, Image as ImageIcon, Save, Building2 } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, Globe, Sparkles, Tag, Package, CheckCircle2, X, Loader2, Image as ImageIcon, Save, Building2 } from 'lucide-react';
 import { analyzeBusinessForCatalogue } from '../services/geminiService';
 
-const initialItems: CatalogueItem[] = [
-  { id: '1', name: 'CRM Implementation', description: 'Full setup and team onboarding for 10 users.', price: 150000, category: 'Service', status: 'Active', sku: 'SVC-CRM-001' },
-  { id: '2', name: 'Annual Maintenance', description: 'Yearly support contract and updates.', price: 50000, category: 'Service', status: 'Active', sku: 'SVC-MNT-002' },
-  { id: '3', name: 'POS Hardware Bundle', description: 'Touchscreen terminal, printer, and scanner.', price: 85000, category: 'Product', status: 'Active', sku: 'HRD-POS-001', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=100' },
-];
+interface CatalogueProps {
+    items: CatalogueItem[];
+    onUpdateItems: (items: CatalogueItem[]) => void;
+}
 
-const Catalogue: React.FC = () => {
-  const [items, setItems] = useState<CatalogueItem[]>(initialItems);
+const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'All' | 'Product' | 'Service'>('All');
   
@@ -62,7 +60,7 @@ const Catalogue: React.FC = () => {
         status: 'Active'
     })) as CatalogueItem[];
 
-    setItems([...items, ...newItems]);
+    onUpdateItems([...items, ...newItems]);
     setShowDiscoveryModal(false);
     setStep('input');
     setDiscoveryName('');
@@ -82,7 +80,7 @@ const Catalogue: React.FC = () => {
           status: newItem.status as any || 'Active',
           sku: `MAN-${Math.floor(Math.random() * 10000)}`
       };
-      setItems([...items, itemToAdd]);
+      onUpdateItems([...items, itemToAdd]);
       setIsAddModalOpen(false);
       setNewItem({ name: '', description: '', price: 0, category: 'Product', status: 'Active' });
   };

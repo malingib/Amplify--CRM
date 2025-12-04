@@ -30,20 +30,22 @@ export interface SystemConfig {
   security: {
     require2FA: boolean;
     sessionTimeout: number; // minutes
+    passwordExpiry?: number; // days
   };
-  notifications?: {
+  notifications: {
     leadAssigned: { email: boolean; sms: boolean; inApp: boolean };
     invoicePaid: { email: boolean; sms: boolean; inApp: boolean };
     taskDue: { email: boolean; sms: boolean; inApp: boolean };
     systemUpdate: { email: boolean; sms: boolean; inApp: boolean };
   };
-  workspace?: {
+  workspace: {
     companyName: string;
     timezone: string;
     dateFormat: string;
     primaryColor: string;
     kraPin?: string;
     logoUrl?: string;
+    address?: string;
   };
   telegramConfig?: {
     botToken: string;

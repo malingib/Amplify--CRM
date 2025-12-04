@@ -1,24 +1,32 @@
-
-
-
-
-
 import React, { useState } from 'react';
 import { Invoice, Transaction, Client } from '../types';
-import { FileText, Plus, Search, CheckCircle2, AlertCircle, Smartphone, Download, Share2, Sparkles, X, Printer, Receipt, Building2, CreditCard, Loader2, Send } from 'lucide-react';
+import { FileText, Plus, Search, CheckCircle2, AlertCircle, Smartphone, Download, Share2, Sparkles, X, Printer, Receipt, Building2, CreditCard, Loader2, Send, TrendingUp } from 'lucide-react';
 import { generatePaymentReminder } from '../services/geminiService';
 import { generatePaymentLink } from '../services/paystackService';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 
 const initialInvoices: Invoice[] = [
     { id: '1', invoiceNumber: 'INV-001', clientId: '1', clientName: 'Wanjiku Trading', amount: 150000, date: '2023-10-01', dueDate: '2023-10-15', status: 'Overdue', items: [], etimsCompliant: false },
     { id: '2', invoiceNumber: 'INV-002', clientId: '2', clientName: 'TechSahara', amount: 85000, date: '2023-10-10', dueDate: '2023-10-25', status: 'Pending', items: [], etimsCompliant: false },
-    { id: '3', invoiceNumber: 'INV-003', clientId: '5', clientName: 'Mombasa Marine', amount: 2500000, date: '2023-10-05', dueDate: '2023-10-05', status: 'Paid', items: [], etimsCompliant: true },
+    { id: '3', invoiceNumber: 'INV-003', clientId: '5', clientName: 'Mombasa Marine', amount: 2500000, date: '2023-10-05', dueDate: '2023-10-05', status: 'Paid', items: [], etimsCompliant: true, cuSerialNumber: 'KRA001293842', etimsDate: '2023-10-05 14:32:11' },
+    { id: '4', invoiceNumber: 'INV-004', clientId: '3', clientName: 'GreenGrocers', amount: 45000, date: '2023-10-28', dueDate: '2023-11-10', status: 'Pending', items: [], etimsCompliant: false },
 ];
 
 const initialTransactions: Transaction[] = [
     { id: '1', code: 'RHI892KD2L', amount: 2500000, sender: 'BLUE OCEAN LTD', date: '2023-10-05 14:30', method: 'M-Pesa', status: 'Verified' },
     { id: '2', code: 'RHI441MQ9P', amount: 5000, sender: 'JOHN KAMAU', date: '2023-10-12 09:15', method: 'M-Pesa', status: 'Unreconciled' },
     { id: '3', code: 'BNK-TX-992', amount: 120000, sender: 'WANJIKU TRADING', date: '2023-10-01 10:00', method: 'Bank', status: 'Verified' },
+];
+
+const cashFlowData = [
+  { name: 'May', inflow: 1200000, outflow: 850000 },
+  { name: 'Jun', inflow: 1800000, outflow: 1200000 },
+  { name: 'Jul', inflow: 1600000, outflow: 950000 },
+  { name: 'Aug', inflow: 2100000, outflow: 1100000 },
+  { name: 'Sep', inflow: 2400000, outflow: 1300000 },
+  { name: 'Oct', inflow: 2850000, outflow: 1600000 },
 ];
 
 const Financials: React.FC = () => {
@@ -134,6 +142,54 @@ const Financials: React.FC = () => {
                         <Receipt className="w-5 h-5" />
                     </div>
                     <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+                </div>
+            </div>
+
+            {/* Cash Flow Graph */}
+            <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm mb-8 shrink-0">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-emerald-600" />
+                            Cash Flow Analysis
+                        </h3>
+                        <p className="text-slate-500 text-xs font-medium mt-1">Income vs Expenses (Last 6 Months)</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span className="text-xs font-bold text-emerald-700">Inflow</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-red-50 rounded-lg border border-red-100">
+                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                            <span className="text-xs font-bold text-red-700">Outflow</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={cashFlowData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorOutflow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                            <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} tickFormatter={(value) => `K${value/1000}k`} />
+                            <Tooltip 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                formatter={(value: number) => [`KES ${value.toLocaleString()}`, '']}
+                            />
+                            <Area type="monotone" dataKey="inflow" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorInflow)" name="Inflow" />
+                            <Area type="monotone" dataKey="outflow" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorOutflow)" name="Outflow" />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 

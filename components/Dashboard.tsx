@@ -1,8 +1,6 @@
 
-
-
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock, Filter, Download, ChevronDown, Activity, DollarSign, Target, Briefcase, Clock, RefreshCw, ChevronRight, CreditCard, Layout } from 'lucide-react';
+import { TrendingUp, Users, MoreHorizontal, ArrowUpRight, Calendar, ArrowRight, Lock, Filter, Download, ChevronDown, Activity, DollarSign, Target, Briefcase, Clock, RefreshCw, ChevronRight, CreditCard, Layout, Eye } from 'lucide-react';
 import { UserRole, ViewState, SystemConfig } from '../types';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -60,13 +58,17 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
   const [isLoading, setIsLoading] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const showFinancials = ['Admin', 'Manager', 'SystemOwner'].includes(userRole);
+  // RBAC for Widgets
+  const canSeeFinancials = ['Admin', 'Manager', 'SystemOwner'].includes(userRole);
+  const canSeePerformance = ['Admin', 'Manager', 'Sales', 'SystemOwner'].includes(userRole);
+  const canSeeActivity = ['Admin', 'Manager', 'SystemOwner', 'Viewer'].includes(userRole);
+  const isViewer = userRole === 'Viewer';
   
-  // Widget Visibility based on Config
+  // Widget Visibility based on Config AND Role
   const showOverview = systemConfig?.dashboardWidgets?.overview ?? true;
-  const showPerformance = systemConfig?.dashboardWidgets?.performance ?? true;
-  const showActivity = systemConfig?.dashboardWidgets?.activity ?? true;
-  const showRevenue = systemConfig?.dashboardWidgets?.revenue ?? true;
+  const showPerformance = (systemConfig?.dashboardWidgets?.performance ?? true) && canSeePerformance;
+  const showActivity = (systemConfig?.dashboardWidgets?.activity ?? true) && canSeeActivity;
+  const showRevenue = (systemConfig?.dashboardWidgets?.revenue ?? true) && canSeeFinancials;
 
   // Simulate data fetching on tab/filter change
   useEffect(() => {
@@ -109,11 +111,13 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                     </h3>
                     <p className="text-slate-500 font-medium mt-1 text-sm">High priority items requiring attention.</p>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={() => handleNav('settings')} className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition hover:border-slate-300 shadow-sm">
-                        <Layout className="w-5 h-5" />
-                    </button>
-                </div>
+                {['Admin', 'SystemOwner'].includes(userRole) && (
+                    <div className="flex gap-2">
+                        <button onClick={() => handleNav('settings')} className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-400 hover:text-slate-900 transition hover:border-slate-300 shadow-sm">
+                            <Layout className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {isLoading ? <LoadingSkeleton /> : (
@@ -122,48 +126,86 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 {showOverview && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* Royal Blue Card */}
-                        <div 
-                            onClick={() => handleNav('pipeline')}
-                            className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm"
-                        >
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.05] rounded-full -mr-20 -mt-20 pointer-events-none blur-3xl"></div>
-                            <div className="flex justify-between items-start relative z-10">
-                                <div className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg text-white ring-1 ring-white/20 uppercase tracking-wider">Oct 4 • Active</div>
-                                <button className="bg-white/10 p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition ring-1 ring-white/10"><ArrowUpRight className="w-5 h-5 text-white" /></button>
-                            </div>
-                            <div className="space-y-1 relative z-10 mt-auto mb-6">
-                                <p className="text-xs font-bold text-blue-100 uppercase tracking-wider opacity-90">Safaricom PLC</p>
-                                <p className="text-3xl font-bold tracking-tight leading-tight">Enterprise Upgrade</p>
-                            </div>
-                            <div className="flex items-end justify-between relative z-10">
-                                <span className="text-4xl font-bold tracking-tighter">$11.2k</span>
-                                <div className="flex -space-x-3 pl-4 pb-1">
-                                    {[1,2,3].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-blue-600 object-cover shadow-sm" alt="" />)}
+                        {!isViewer ? (
+                            <div 
+                                onClick={() => handleNav('pipeline')}
+                                className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[32px] p-8 text-white relative overflow-hidden group hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-blue-500/50 ring-4 ring-white shadow-sm"
+                            >
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-[0.05] rounded-full -mr-20 -mt-20 pointer-events-none blur-3xl"></div>
+                                <div className="flex justify-between items-start relative z-10">
+                                    <div className="text-[10px] font-bold bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg text-white ring-1 ring-white/20 uppercase tracking-wider">Oct 4 • Active</div>
+                                    <button className="bg-white/10 p-2 rounded-full backdrop-blur-md hover:bg-white/20 transition ring-1 ring-white/10"><ArrowUpRight className="w-5 h-5 text-white" /></button>
+                                </div>
+                                <div className="space-y-1 relative z-10 mt-auto mb-6">
+                                    <p className="text-xs font-bold text-blue-100 uppercase tracking-wider opacity-90">Safaricom PLC</p>
+                                    <p className="text-3xl font-bold tracking-tight leading-tight">Enterprise Upgrade</p>
+                                </div>
+                                <div className="flex items-end justify-between relative z-10">
+                                    <span className="text-4xl font-bold tracking-tighter">$11.2k</span>
+                                    <div className="flex -space-x-3 pl-4 pb-1">
+                                        {[1,2,3].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-blue-600 object-cover shadow-sm" alt="" />)}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-slate-50 rounded-[32px] p-8 flex flex-col items-center justify-center text-center border border-slate-200/60 min-h-[280px]">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
+                                    <Eye className="w-6 h-6 text-slate-300" />
+                                </div>
+                                <h4 className="font-bold text-slate-900">Viewer Mode</h4>
+                                <p className="text-xs text-slate-500 mt-1 max-w-[150px]">You are in read-only mode. Financial deals are hidden.</p>
+                            </div>
+                        )}
 
                         {/* Warm Amber Card */}
-                        <div 
-                            onClick={() => handleNav('pipeline')}
-                            className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm"
-                        >
-                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.2] rounded-full -ml-20 -mb-20 pointer-events-none blur-3xl"></div>
-                            <div className="flex justify-between items-start relative z-10">
-                                <div className="text-[10px] font-bold bg-black/5 px-3 py-1.5 rounded-lg text-slate-900 backdrop-blur-sm border border-black/5 uppercase tracking-wider">Oct 11 • Pending</div>
-                                <button className="bg-black/5 p-2 rounded-full hover:bg-black/10 transition border border-black/5"><ArrowUpRight className="w-5 h-5 text-slate-900" /></button>
-                            </div>
-                            <div className="space-y-1 relative z-10 mt-auto mb-6">
-                                <p className="text-xs font-bold text-slate-900/70 uppercase tracking-wider">Mombasa Marine</p>
-                                <p className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Logistics Hub</p>
-                            </div>
-                            <div className="flex items-end justify-between relative z-10">
-                                <span className="text-4xl font-bold tracking-tighter text-slate-900">$4.1k</span>
-                                <div className="flex -space-x-3 pl-4 pb-1">
-                                    {[4,5].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-amber-400 object-cover shadow-sm" alt="" />)}
+                        {!isViewer ? (
+                            <div 
+                                onClick={() => handleNav('pipeline')}
+                                className="bg-gradient-to-br from-amber-400 to-amber-500 rounded-[32px] p-8 text-slate-900 relative overflow-hidden group hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-500 hover:-translate-y-1 cursor-pointer min-h-[280px] flex flex-col justify-between border border-amber-300 ring-4 ring-white shadow-sm"
+                            >
+                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-[0.2] rounded-full -ml-20 -mb-20 pointer-events-none blur-3xl"></div>
+                                <div className="flex justify-between items-start relative z-10">
+                                    <div className="text-[10px] font-bold bg-black/5 px-3 py-1.5 rounded-lg text-slate-900 backdrop-blur-sm border border-black/5 uppercase tracking-wider">Oct 11 • Pending</div>
+                                    <button className="bg-black/5 p-2 rounded-full hover:bg-black/10 transition border border-black/5"><ArrowUpRight className="w-5 h-5 text-slate-900" /></button>
+                                </div>
+                                <div className="space-y-1 relative z-10 mt-auto mb-6">
+                                    <p className="text-xs font-bold text-slate-900/70 uppercase tracking-wider">Mombasa Marine</p>
+                                    <p className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Logistics Hub</p>
+                                </div>
+                                <div className="flex items-end justify-between relative z-10">
+                                    <span className="text-4xl font-bold tracking-tighter text-slate-900">$4.1k</span>
+                                    <div className="flex -space-x-3 pl-4 pb-1">
+                                        {[4,5].map(i => <img key={i} src={`https://picsum.photos/60/60?random=${i}`} className="w-10 h-10 rounded-full border-[2px] border-amber-400 object-cover shadow-sm" alt="" />)}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm flex flex-col min-h-[280px]">
+                                 <div className="flex items-center gap-4 mb-6">
+                                     <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                                         <Clock className="w-6 h-6" />
+                                     </div>
+                                     <div>
+                                         <h4 className="font-bold text-slate-900">Recent Updates</h4>
+                                         <p className="text-xs text-slate-500">System activity</p>
+                                     </div>
+                                 </div>
+                                 <div className="space-y-4">
+                                     <div className="flex items-center gap-3">
+                                         <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                         <p className="text-xs font-medium text-slate-600">Invoice #INV-001 generated</p>
+                                     </div>
+                                     <div className="flex items-center gap-3">
+                                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                         <p className="text-xs font-medium text-slate-600">New Client added</p>
+                                     </div>
+                                     <div className="flex items-center gap-3">
+                                         <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                                         <p className="text-xs font-medium text-slate-600">Maintenance Scheduled</p>
+                                     </div>
+                                 </div>
+                            </div>
+                        )}
 
                         {/* Deep Black Card */}
                         {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
@@ -201,7 +243,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 )}
 
                 {/* Second Row: Charts & Calendar */}
-                {showPerformance && (
+                {showPerformance ? (
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
                         {/* Stage Funnel Chart */}
                         <div className="md:col-span-8 bg-white rounded-[32px] p-8 min-h-[380px] border border-slate-200 shadow-sm flex flex-col">
@@ -272,6 +314,15 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                                 View Calendar <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
                             </button>
                         </div>
+                    </div>
+                ) : (
+                    // Alternate View for Viewers/Restricted Roles
+                    <div className="bg-white p-12 rounded-[32px] border border-slate-200 shadow-sm text-center">
+                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Lock className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900">Performance Metrics Hidden</h3>
+                        <p className="text-slate-500 mt-2 max-w-md mx-auto text-sm">Your current role does not have permission to view detailed sales performance charts and pipeline analytics.</p>
                     </div>
                 )}
             </>
@@ -516,7 +567,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
 
   return (
     <div className="p-6 lg:p-8 max-w-[1800px] mx-auto space-y-6 pb-24">
-      {/* Top Navigation / Breadcrumbs - Now Functional */}
+      {/* Top Navigation / Breadcrumbs */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
         <div className="flex items-center gap-6 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
             <span className="text-2xl font-bold text-slate-900 whitespace-nowrap tracking-tight">Dashboard</span>
@@ -526,7 +577,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                     showOverview ? 'Overview' : null, 
                     showPerformance ? 'Sales Performance' : null, 
                     showActivity ? 'Team Activity' : null, 
-                    showFinancials && showRevenue ? 'Revenue' : null
+                    showRevenue ? 'Revenue' : null
                 ].filter(Boolean).map((item, i) => (
                     <button 
                         key={item} 
@@ -578,9 +629,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
       {/* Stats Row */}
       {showOverview && (
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-5">
-         {showFinancials ? (
+         {canSeeFinancials ? (
             <div 
-                onClick={() => setActiveTab('Revenue')}
+                onClick={() => { if(showRevenue) setActiveTab('Revenue') }}
                 className={`bg-white p-5 rounded-[24px] flex items-center gap-4 w-full shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 group hover:-translate-y-0.5 cursor-pointer ${activeTab === 'Revenue' ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
             >
                 <div className="bg-emerald-50 p-3 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300 shrink-0 border border-emerald-100">
@@ -598,7 +649,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                      </ResponsiveContainer>
                 </div>
             </div>
-         ) : (
+         ) : !isViewer ? (
             <div 
                 onClick={() => handleNav('pipeline')}
                 className="bg-white p-5 rounded-[24px] flex items-center gap-4 w-full shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer hover:shadow-md group"
@@ -609,6 +660,16 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 <div className="flex-1">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">My Pipeline</p>
                     <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">$245k</p>
+                </div>
+            </div>
+         ) : (
+            <div className="bg-white p-5 rounded-[24px] flex items-center gap-4 w-full shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer hover:shadow-md group">
+                 <div className="bg-slate-50 p-3 rounded-2xl group-hover:bg-slate-200 transition-colors duration-300 shrink-0 border border-slate-100">
+                    <Eye className="w-6 h-6 text-slate-400 group-hover:text-slate-600" />
+                </div>
+                <div className="flex-1">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Assigned Tasks</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-tight leading-none">8</p>
                 </div>
             </div>
          )}
@@ -661,7 +722,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
       {activeTab === 'Overview' && showOverview && renderOverview()}
       {activeTab === 'Sales Performance' && showPerformance && renderPerformance()}
       {activeTab === 'Team Activity' && showActivity && renderTeamActivity()}
-      {activeTab === 'Revenue' && showFinancials && showRevenue && renderRevenue()} 
+      {activeTab === 'Revenue' && showRevenue && renderRevenue()} 
       
     </div>
   );
