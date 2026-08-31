@@ -16,6 +16,8 @@ export interface SystemConfig {
     compliance: boolean;
     bulkSms: boolean;
     telegram: boolean;
+    whatsapp: boolean;
+    googleChat: boolean;
   };
   crm: {
     autoConvert: boolean;
@@ -46,6 +48,11 @@ export interface SystemConfig {
     kraPin?: string;
     logoUrl?: string;
     address?: string;
+  };
+  googleWorkspace?: {
+    clientId: string;
+    allowedDomain: string;
+    chatEnabled: boolean;
   };
   telegramConfig?: {
     botToken: string;
@@ -245,4 +252,65 @@ export type ViewState =
   | 'system-tenants'
   | 'system-financials'
   | 'system-approvals'
-  | 'lead-acquisition';
+  | 'lead-acquisition'
+  | 'whatsapp'
+  | 'channels';
+
+export interface InvoiceItem {
+  id: string;
+  invoiceId: string;
+  catalogueItemId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface Proposal {
+  id: string;
+  leadId: string;
+  title: string;
+  content: string;
+  total: number;
+  status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected';
+  createdAt: string;
+  updatedAt: string;
+  validUntil?: string;
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  trigger: string;
+  conditions?: string;
+  actions: string;
+  enabled: boolean;
+  lastRun?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhatsAppSession {
+  id: string;
+  instanceName: string;
+  phone?: string;
+  status: 'created' | 'connected' | 'disconnected' | 'expired';
+  qrCodeUrl?: string;
+}
+
+export interface TelegramConfig {
+  botToken: string;
+  chatId: string;
+  botName?: string;
+  webhookUrl?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId?: string;
+  actor?: string;
+  action: string;
+  status: string;
+  details: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  createdAt: string;
+}

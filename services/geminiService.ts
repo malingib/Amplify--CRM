@@ -2,11 +2,21 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.API_KEY || 'dummy_key'; 
-// Note: In a real scenario, this would fail without a key. 
-// For this demo structure, we assume the key is present in the environment.
+const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
 
-const ai = new GoogleGenAI({ apiKey });
+const isAiAvailable = apiKey.length > 0 && apiKey !== 'dummy_key';
+let ai: GoogleGenAI | null = null;
+if (isAiAvailable) {
+  ai = new GoogleGenAI({ apiKey });
+}
+
+const aiUnavailable = (): string => {
+  return 'AI service unavailable. Please configure a valid Gemini API key in your environment.';
+};
+
+const aiUnavailableObj = (): any => {
+  return null;
+};
 
 export const generateProposal = async (
   clientName: string,
@@ -14,6 +24,7 @@ export const generateProposal = async (
   value: number,
   tone: 'formal' | 'friendly' | 'urgent'
 ): Promise<string> => {
+  if (!ai) return aiUnavailable();
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
@@ -50,6 +61,7 @@ export const generateChatReply = async (
   lastMessage: string,
   clientName: string
 ): Promise<string> => {
+  if (!ai) return aiUnavailable();
   try {
     const model = 'gemini-2.5-flash-lite'; // Fast model for chat
     const prompt = `
@@ -73,6 +85,7 @@ export const generateChatReply = async (
 };
 
 export const interpretCrmCommand = async (input: string, userRole: string) => {
+  if (!ai) return { reply: aiUnavailable(), action: 'none' };
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
@@ -123,6 +136,7 @@ export const interpretCrmCommand = async (input: string, userRole: string) => {
 };
 
 export const analyzePipeline = async (leadsCount: number, revenue: number): Promise<string> => {
+  if (!ai) return aiUnavailable();
    try {
     const model = 'gemini-2.5-flash';
     const prompt = `
@@ -146,6 +160,7 @@ export const analyzePipeline = async (leadsCount: number, revenue: number): Prom
 };
 
 export const qualifyLead = async (name: string, company: string, notes: string, value: number) => {
+  if (!ai) return { score: 0, summary: aiUnavailable() };
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
@@ -184,6 +199,7 @@ export const qualifyLead = async (name: string, company: string, notes: string, 
 };
 
 export const generateFollowUpStrategy = async (name: string, company: string, stage: string, lastContact: string, notes: string) => {
+  if (!ai) return aiUnavailable();
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
@@ -216,6 +232,7 @@ export const generateFollowUpStrategy = async (name: string, company: string, st
 };
 
 export const generateLeads = async (industry: string, location: string, useMaps: boolean = false, quantity: number = 5) => {
+  if (!ai) return { leads: [], sources: [] };
   try {
     const model = 'gemini-2.5-flash';
     
@@ -300,6 +317,7 @@ export const generateLeads = async (industry: string, location: string, useMaps:
 };
 
 export const analyzeBusinessForCatalogue = async (businessName: string, url: string, additionalInfo: string) => {
+  if (!ai) return { error: aiUnavailable() };
   try {
     const model = 'gemini-2.5-flash';
     
@@ -362,6 +380,7 @@ export const generatePaymentReminder = async (
   invoiceNumber: string,
   daysOverdue: number
 ): Promise<string> => {
+  if (!ai) return aiUnavailable();
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `

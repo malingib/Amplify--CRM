@@ -190,8 +190,8 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
     };
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
-            <div className="flex justify-between items-end mb-8 shrink-0">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 shrink-0 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         <span className="bg-emerald-500 text-white p-2 rounded-xl shadow-lg shadow-emerald-500/20">
@@ -211,7 +211,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                 <div className="w-full xl:w-[400px] shrink-0 flex flex-col gap-6 overflow-y-auto hide-scrollbar pb-12">
                     
                     {/* Mission Control Card */}
-                    <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 flex flex-col">
+                    <div className="p-6 rounded-3xl flex flex-col">
                         <div className="mb-6 flex justify-between items-start">
                             <div>
                                 <h3 className="font-bold text-slate-900 text-lg">Mission Control</h3>
@@ -341,7 +341,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                     </div>
                     
                     {/* Saved Searches */}
-                    <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+                    <div className="p-6 rounded-3xl flex-1 overflow-hidden flex flex-col">
                         <h4 className="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2 shrink-0">
                             <Bookmark className="w-4 h-4 text-slate-400" /> Saved Scouts
                         </h4>
@@ -369,7 +369,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                 </div>
 
                 {/* Right Panel: Results & Visualization */}
-                <div className="flex-1 bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col relative">
+                <div className="flex-1 rounded-3xl overflow-hidden flex flex-col relative">
                     {/* Header */}
                     <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -393,14 +393,14 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                                     </div>
                                     <button 
                                         onClick={handleExportCSV}
-                                        className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 transition px-3 py-2 bg-white rounded-lg border border-slate-200 hover:bg-slate-50"
+                                        className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 transition px-3 py-2 rounded-lg hover:bg-slate-50"
                                         title="Export Selected to CSV"
                                     >
                                         <FileText className="w-3.5 h-3.5" /> Export
                                     </button>
                                 </>
                             )}
-                            <div className="flex bg-white rounded-lg border border-slate-200 p-1">
+                            <div className="flex rounded-lg p-1">
                                 <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition ${viewMode === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
                                     <LayoutGrid className="w-4 h-4" />
                                 </button>
@@ -436,7 +436,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                                     <div 
                                         key={idx} 
                                         onClick={() => toggleSelection(idx)}
-                                        className={`bg-white rounded-3xl p-6 border transition-all duration-300 group flex cursor-pointer relative ${
+                                        className={`rounded-3xl p-6 border transition-all duration-300 group flex cursor-pointer relative ${
                                             viewMode === 'list' ? 'flex-row items-center gap-6' : 'flex-col'
                                         } ${selectedIndices.has(idx) ? 'border-emerald-500 ring-1 ring-emerald-500 shadow-md bg-emerald-50/10' : 'border-slate-200 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1'}`}
                                     >
@@ -552,7 +552,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                         ) : (
                              !isScanning && (
                                 <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto">
-                                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
+                                    <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6">
                                         <Target className="w-10 h-10 text-slate-300" />
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900 mb-2">Ready to Hunt</h3>
@@ -580,7 +580,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
 
                     {/* Footer Sources */}
                     {sources.length > 0 && (
-                        <div className="p-4 border-t border-slate-100 bg-white text-center">
+                        <div className="p-4 border-t border-slate-100 text-center">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Verified Sources</p>
                             <div className="flex flex-wrap justify-center gap-2">
                                 {sources.map((s, i) => (
@@ -589,7 +589,7 @@ const LeadAcquisition: React.FC<LeadAcquisitionProps> = ({ onAddLead }) => {
                                         href={s.uri} 
                                         target="_blank" 
                                         rel="noreferrer"
-                                        className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition shadow-sm"
+                                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition"
                                     >
                                         {s.title.substring(0, 20)}... <ExternalLink className="w-2.5 h-2.5" />
                                     </a>

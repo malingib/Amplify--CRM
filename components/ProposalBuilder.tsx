@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Send, Download, FileText, Loader2, Check, ChevronRight, ChevronLeft, User, Building2 } from 'lucide-react';
+import { Sparkles, Send, Download, FileText, Loader2, Check, ChevronRight, ChevronLeft, User, Building2, ExternalLink, Mail } from 'lucide-react';
 import { generateProposal } from '../services/geminiService';
 import { Lead } from '../types';
+import { workspaceApi } from '../src/api/client';
 
 interface ProposalBuilderProps {
     initialData?: Lead | null;
@@ -18,6 +19,34 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
   const [generatedContent, setGeneratedContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [step, setStep] = useState(1);
+  const [driveLoading, setDriveLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [driveUrl, setDriveUrl] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const handleSendToDrive = async () => {
+    if (!generatedContent) return;
+    setDriveLoading(true);
+    const result = await workspaceApi.createDriveDoc({
+      title: `Proposal — ${clientName}`,
+      content: generatedContent,
+    });
+    if (result?.url) setDriveUrl(result.url);
+    setDriveLoading(false);
+  };
+
+  const handleSendEmail = async () => {
+    if (!generatedContent) return;
+    setEmailLoading(true);
+    const clientEmail = initialData?.email || `${clientName.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+    const result = await workspaceApi.sendEmail({
+      to: clientEmail,
+      subject: `Proposal — ${clientName}`,
+      body: `<pre>${generatedContent}</pre>`,
+    });
+    if (result?.success) setEmailSent(true);
+    setEmailLoading(false);
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -40,11 +69,11 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-full flex flex-col">
-      <div className="mb-8 shrink-0 flex items-center gap-4">
+    <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto h-full flex flex-col">
+      <div className="mb-8 shrink-0 flex flex-wrap items-center gap-4">
         <button 
             onClick={onBack}
-            className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:shadow-sm transition"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-900 hover:shadow-sm transition"
         >
             <ChevronLeft className="w-5 h-5" />
         </button>
@@ -60,10 +89,10 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 overflow-hidden min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 flex-1 overflow-hidden min-h-0">
         {/* Input Section */}
-        <div className="lg:col-span-5 h-full overflow-y-auto custom-scrollbar pr-2 pb-2">
-          <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-200 h-full lg:h-auto">
+        <div className="md:col-span-5 h-full overflow-y-auto custom-scrollbar pr-2 pb-2">
+          <div className="p-6 md:p-8 rounded-3xl h-full lg:h-auto">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-slate-900/20 border-4 border-slate-100">1</div>
                 <div>
@@ -73,29 +102,31 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
             </div>
             
             <div className="space-y-6">
-                <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Client Contact</label>
-                    <div className="relative">
-                        <input 
-                            type="text" 
-                            className="w-full p-4 pl-12 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
-                            placeholder="e.g. Safaricom PLC"
-                            value={clientName}
-                            onChange={(e) => setClientName(e.target.value)}
-                        />
-                        <User className="w-4 h-4 absolute left-4 top-4 text-slate-400" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Client Contact</label>
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                className="w-full p-4 pl-12 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
+                                placeholder="e.g. Safaricom PLC"
+                                value={clientName}
+                                onChange={(e) => setClientName(e.target.value)}
+                            />
+                            <User className="w-4 h-4 absolute left-4 top-4 text-slate-400" />
+                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Total Value (KES)</label>
-                    <input 
-                        type="number" 
-                        className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
-                        placeholder="e.g. 1,500,000"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                    />
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Total Value (KES)</label>
+                        <input 
+                            type="number" 
+                            className="w-full p-4 bg-slate-50 border border-transparent rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 focus:bg-white focus:border-slate-200 transition font-bold text-slate-900 placeholder:text-slate-400 text-sm shadow-sm"
+                            placeholder="e.g. 1,500,000"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 <div className="space-y-2">
@@ -110,12 +141,12 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
 
                  <div className="space-y-3">
                     <label className="block text-[10px] font-bold text-slate-500 ml-2 uppercase tracking-widest">Tone of Voice</label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {['formal', 'friendly', 'urgent'].map((t) => (
                             <button
                                 key={t}
                                 onClick={() => setTone(t as any)}
-                                className={`flex-1 py-3 rounded-xl text-xs font-bold capitalize transition border-2 ${
+                                className={`flex-1 min-w-[80px] py-3 rounded-xl text-xs font-bold capitalize transition border-2 ${
                                     tone === t 
                                     ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20' 
                                     : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200 hover:text-slate-800'
@@ -151,11 +182,11 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
         </div>
 
         {/* Preview Section */}
-        <div className="lg:col-span-7 h-full flex flex-col min-h-0 pb-2">
-             <div className={`h-full bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 border border-slate-200 flex flex-col overflow-hidden transition-all duration-500 ${step === 1 ? 'opacity-60 grayscale-[0.3]' : 'opacity-100 ring-4 ring-slate-50'}`}>
-                <div className="bg-slate-50/80 p-6 flex justify-between items-center border-b border-slate-200 backdrop-blur-md shrink-0">
+        <div className="md:col-span-7 h-full flex flex-col min-h-0 pb-2">
+             <div className={`h-full rounded-3xl flex flex-col overflow-hidden transition-all duration-500 ${step === 1 ? 'opacity-60 grayscale-[0.3]' : 'opacity-100 ring-4 ring-slate-50'}`}>
+                 <div className="bg-slate-50/80 p-4 md:p-6 flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 shrink-0">
                     <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 border border-slate-200 shadow-sm">
+                         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-blue-600">
                             <FileText className="w-6 h-6" />
                          </div>
                         <div>
@@ -168,7 +199,7 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
                     </div>
                 </div>
                 
-                <div className="flex-1 p-10 overflow-y-auto custom-scrollbar bg-white relative">
+                <div className="flex-1 p-4 md:p-10 overflow-y-auto custom-scrollbar relative">
                     {generatedContent ? (
                         <div className="prose prose-slate max-w-none prose-headings:font-bold prose-p:text-slate-600 prose-li:text-slate-600 prose-strong:text-slate-900">
                              <div className="whitespace-pre-wrap text-slate-800 leading-loose font-medium text-base">
@@ -185,15 +216,34 @@ const ProposalBuilder: React.FC<ProposalBuilderProps> = ({ initialData, mode = '
                     )}
                 </div>
 
-                <div className="p-6 border-t border-slate-200 bg-slate-50/80 flex justify-between items-center backdrop-blur-md shrink-0">
+                 <div className="p-4 md:p-6 border-t border-slate-200 bg-slate-50/80 flex flex-wrap justify-between items-center gap-3 shrink-0">
                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Status: Draft</span>
-                     <div className="flex gap-3">
-                        <button className="px-6 py-3 text-slate-600 font-bold hover:bg-white hover:shadow-sm rounded-xl transition border border-transparent hover:border-slate-200 text-sm">Save Draft</button>
-                        <button className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition flex items-center gap-2 shadow-xl shadow-slate-900/20 active:scale-95 text-sm">
+                     <div className="flex gap-3 flex-wrap items-center">
+                        {driveUrl ? (
+                            <a href={driveUrl} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-1.5 hover:bg-blue-100 transition">
+                                <ExternalLink className="w-3.5 h-3.5" /> Open in Drive
+                            </a>
+                        ) : (
+                            <button onClick={handleSendToDrive} disabled={!generatedContent || driveLoading} className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-white hover:shadow-sm rounded-xl transition border border-transparent hover:border-slate-200 flex items-center gap-1.5 disabled:opacity-40">
+                                {driveLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                                {driveLoading ? 'Creating...' : 'Save to Drive'}
+                            </button>
+                        )}
+                        {emailSent ? (
+                            <span className="px-4 py-2.5 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-1.5">
+                                <Check className="w-3.5 h-3.5" /> Sent
+                            </span>
+                        ) : (
+                            <button onClick={handleSendEmail} disabled={!generatedContent || emailLoading} className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-white hover:shadow-sm rounded-xl transition border border-transparent hover:border-slate-200 flex items-center gap-1.5 disabled:opacity-40">
+                                {emailLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                                {emailLoading ? 'Sending...' : 'Send via Gmail'}
+                            </button>
+                        )}
+                        <button className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition flex items-center gap-2 shadow-xl shadow-slate-900/20 active:scale-95 text-sm">
                             Approve & Send <ChevronRight className="w-4 h-4" />
                         </button>
                      </div>
-                </div>
+                 </div>
              </div>
         </div>
       </div>

@@ -1,26 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, TeamMember } from '../types';
 import { Plus, MoreHorizontal, Clock, Search, Filter, X, Save, Bell, Smartphone, CalendarCheck, Loader2 } from 'lucide-react';
 import { scheduleSmsReminder } from '../services/smsService';
-
-const initialTasks: Task[] = [
-    { id: '1', title: 'Prepare Q3 Financial Report', description: 'Review revenue streams and expenses.', assigneeId: '1', dueDate: '2025-10-20', priority: 'High', status: 'To Do' },
-    { id: '2', title: 'Client Meeting with Safaricom', description: 'Discuss the new API integration proposal.', assigneeId: '1', dueDate: '2025-10-21', priority: 'High', status: 'In Progress' },
-    { id: '3', title: 'Update CRM Database', description: 'Clean up duplicate contacts.', assigneeId: '2', dueDate: '2025-10-25', priority: 'Low', status: 'To Do' },
-    { id: '4', title: 'Draft Newsletter', description: 'Monthly update for stakeholders.', assigneeId: '3', dueDate: '2025-10-22', priority: 'Medium', status: 'Done' },
-];
-
-const teamMembers: TeamMember[] = [
-    { id: '1', name: 'Eva Robinson', role: 'Admin', email: 'eva@company.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', status: 'Active', phone: '+254711000001' },
-    { id: '2', name: 'John Doe', role: 'Sales', email: 'john@company.com', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100', status: 'Active', phone: '+254711000002' },
-    { id: '3', name: 'Jane Smith', role: 'Manager', email: 'jane@company.com', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100', status: 'Offline', phone: '+254711000003' },
-];
+import { tasksApi, teamApi } from '../src/api/client';
 
 const Tasks: React.FC = () => {
-    const [tasks, setTasks] = useState<Task[]>(initialTasks);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     
     // Filter State
     const [priorityFilter, setPriorityFilter] = useState<'All' | 'High'>('All');
@@ -32,6 +22,32 @@ const Tasks: React.FC = () => {
     const [reminderEnabled, setReminderEnabled] = useState(false);
     const [reminderPhone, setReminderPhone] = useState('');
     const [reminderTime, setReminderTime] = useState('');
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [tasksRes, teamRes] = await Promise.all([
+                    tasksApi.list(),
+                    teamApi.list(),
+                ]);
+                setTasks(tasksRes.tasks || []);
+                setTeamMembers((teamRes.users || []).map((u: any) => ({
+                    id: u.id,
+                    name: u.name,
+                    role: u.role,
+                    email: u.email,
+                    avatar: u.avatar,
+                    status: u.status,
+                    phone: u.phone,
+                })));
+            } catch (err) {
+                console.error('Failed to load tasks:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, []);
 
     const getAssignee = (id: string) => teamMembers.find(m => m.id === id);
 
@@ -87,7 +103,12 @@ const Tasks: React.FC = () => {
             }
         }
 
-        setTasks([...tasks, taskToAdd]);
+        try {
+            const res = await tasksApi.create(taskToAdd);
+            setTasks([...tasks, res.task]);
+        } catch (err) {
+            console.error('Failed to create task:', err);
+        }
         
         // Reset and close
         setIsSaving(false);
@@ -101,14 +122,14 @@ const Tasks: React.FC = () => {
     const filteredTasks = tasks.filter(t => priorityFilter === 'All' || t.priority === priorityFilter);
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto pb-20 h-[calc(100vh-2rem)] flex flex-col">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto pb-20 h-[calc(100vh-2rem)] flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8 shrink-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 shrink-0 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Task Management</h2>
                     <p className="text-slate-500 font-medium mt-1 text-sm">Track and manage team deliverables.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <div className="relative hidden md:block group">
                         <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                         <input type="text" placeholder="Search tasks..." className="pl-10 pr-4 py-3 bg-white rounded-xl shadow-sm border border-slate-200 focus:ring-4 focus:ring-slate-100 focus:border-slate-300 outline-none text-sm font-semibold w-64 transition-all" />
@@ -130,7 +151,7 @@ const Tasks: React.FC = () => {
 
             {/* Kanban Board */}
             <div className="flex-1 overflow-x-auto pb-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-[1000px] h-full">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 min-w-0 md:min-w-[1000px] h-full">
                     {columns.map(col => (
                         <div key={col} className="flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4 px-2">
@@ -143,11 +164,11 @@ const Tasks: React.FC = () => {
                                 <button className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-white rounded-full transition"><MoreHorizontal className="w-4 h-4" /></button>
                             </div>
 
-                            <div className="flex-1 bg-slate-100/50 rounded-[32px] p-4 space-y-4 border border-slate-200/60 overflow-y-auto custom-scrollbar">
+                            <div className="flex-1 bg-slate-100/50 rounded-3xl p-4 space-y-4 border border-slate-200/60 overflow-y-auto custom-scrollbar">
                                 {filteredTasks.filter(t => t.status === col).map(task => {
                                     const assignee = getAssignee(task.assigneeId);
                                     return (
-                                        <div key={task.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:shadow-slate-200/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative">
+                                        <div key={task.id} className="p-5 rounded-2xl hover:shadow-lg hover:shadow-slate-200/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative">
                                             <div className="flex justify-between items-start mb-3">
                                                 <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${getPriorityColor(task.priority)}`}>
                                                     {task.priority}
@@ -195,7 +216,7 @@ const Tasks: React.FC = () => {
             {/* Add Task Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
                          <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                         
                         <div className="mb-8">
@@ -215,7 +236,7 @@ const Tasks: React.FC = () => {
                                 />
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Assignee</label>
                                     <select 
@@ -268,7 +289,7 @@ const Tasks: React.FC = () => {
                                 </div>
 
                                 {reminderEnabled && (
-                                    <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
                                         <div>
                                             <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Recipient Phone</label>
                                             <div className="relative">
@@ -298,7 +319,7 @@ const Tasks: React.FC = () => {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Priority</label>
                                     <select 

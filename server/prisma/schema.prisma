@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth & Users ───────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SALES
+  VIEWER
+  SYSTEM_OWNER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String
+  role          UserRole  @default(VIEWER)
+  avatar        String?
+  phone         String?
+  googleId      String?   @unique @map("google_id")
+  status        String    @default("Active") // Active | Offline | Away
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  ownedLeads    Lead[]          @relation("UserLeads")
+  assignedTasks Task[]          @relation("UserTasks")
+  auditLogs     AuditLog[]
+  workflows     Workflow[]
+
+  @@map("users")
+}
+
+// ─── Leads / Pipeline ───────────────────────────────────────
+
+enum DealStage {
+  INTAKE
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED
+  LOST
+}
+
+model Lead {
+  id              String    @id @default(cuid())
+  name            String
+  company         String
+  value           Float     @default(0)
+  stage           DealStage @default(INTAKE)
+  lastContact     DateTime? @map("last_contact")
+  probability     Int       @default(10)
+  avatar          String?
+  email           String?
+  phone           String?
+  notes           String?
+  source          String?   @default("Manual")
+  proposalStatus  String?   @default("None") @map("proposal_status")
+
+  // Qualification
+  qualificationScore   Int?    @map("qualification_score")
+  qualificationSummary String? @map("qualification_summary")
+
+  // Deep Insights
+  growthPotential   String? @map("growth_potential")
+  riskAssessment    String? @map("risk_assessment")
+  painPoints        String? // JSON array stored as string
+  socialHighlights  String? @map("social_highlights")
+  suggestedSolution String? @map("suggested_solution")
+  engagementStrategy String? @map("engagement_strategy")
+  nextSteps         String? // JSON array stored as string
+
+  // Socials
+  linkedin  String?
+  twitter   String?
+  website   String?
+  facebook  String?
+  instagram String?
+  address   String?
+
+  order     Int       @default(0)
+  ownerId   String?   @map("owner_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  owner          User?          @relation("UserLeads", fields: [ownerId], references: [id], onDelete: SetNull)
+  activityLogs   ActivityLog[]
+  proposals      Proposal[]
+
+  @@index([stage])
+  @@index([ownerId])
+  @@map("leads")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  type        String   // Call | Email | Meeting | Note | System
+  content     String
+  date        DateTime @default(now())
+  performedBy String?  @map("performed_by")
+  leadId      String   @map("lead_id")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("activity_logs")
+}
+
+// ─── Clients ────────────────────────────────────────────────
+
+model Client {
+  id            String   @id @default(cuid())
+  name          String
+  company       String
+  email         String
+  phone         String
+  status        String   @default("Active") // Active | Inactive | Pending
+  lastOrder     DateTime? @map("last_order")
+  totalRevenue  Float    @default(0) @map("total_revenue")
+  avatar        String?
+  industry      String   @default("General")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  invoices      Invoice[]
+  transactions  Transaction[]
+
+  @@map("clients")
+}
+
+// ─── Catalogue ──────────────────────────────────────────────
+
+model CatalogueItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  category    String   @default("Service") // Product | Service
+  sku         String?
+  image       String?
+  status      String   @default("Active") // Active | Draft | Archived
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  invoiceItems InvoiceItem[]
+
+  @@map("catalogue_items")
+}
+
+// ─── Invoices & Payments ────────────────────────────────────
+
+model Invoice {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique @map("invoice_number")
+  clientId        String   @map("client_id")
+  amount          Float
+  date            DateTime @default(now())
+  dueDate         DateTime @map("due_date")
+  status          String   @default("Pending") // Paid | Pending | Overdue
+
+  // eTIMS
+  etimsCompliant  Boolean  @default(false) @map("etims_compliant")
+  cuSerialNumber  String?  @map("cu_serial_number")
+  etimsDate       DateTime? @map("etims_date")
+  qrCodeUrl       String?  @map("qr_code_url")
+  transmissionStatus String? @default("Pending") @map("transmission_status")
+
+  // Payment
+  paymentLink     String?  @map("payment_link")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  client          Client         @relation(fields: [clientId], references: [id])
+  items           InvoiceItem[]
+
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String   @map("invoice_id")
+  catalogueItemId String? @map("catalogue_item_id")
+  name        String
+  quantity    Int      @default(1)
+  unitPrice   Float    @map("unit_price")
+  total       Float
+
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  catalogueItem CatalogueItem? @relation(fields: [catalogueItemId], references: [id])
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  code      String   @unique // M-Pesa code
+  amount    Float
+  sender    String
+  date      DateTime @default(now())
+  method    String   // M-Pesa | Bank | Cash
+  status    String   @default("Unreconciled") // Verified | Unreconciled
+  clientId  String?  @map("client_id")
+
+  client    Client?  @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@map("transactions")
+}
+
+// ─── Tasks ──────────────────────────────────────────────────
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  assigneeId  String?  @map("assignee_id")
+  dueDate     DateTime @map("due_date")
+  priority    String   @default("Medium") // High | Medium | Low
+  status      String   @default("To Do") // To Do | In Progress | Done
+  reminderSet Boolean  @default(false) @map("reminder_set")
+  reminderTime DateTime? @map("reminder_time")
+  reminderPhone String? @map("reminder_phone")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  assignee User? @relation("UserTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([assigneeId])
+  @@map("tasks")
+}
+
+// ─── Proposals ──────────────────────────────────────────────
+
+model Proposal {
+  id          String   @id @default(cuid())
+  leadId      String   @map("lead_id")
+  content     String   // Markdown content
+  tone        String   @default("formal")
+  status      String   @default("Draft") // Draft | Sent | Accepted | Rejected
+  value       Float    @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("proposals")
+}
+
+// ─── Workflows (Automation) ─────────────────────────────────
+
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String   // lead_created | lead_stage_changed | invoice_created | invoice_paid | lead_stale
+  conditions  String?  // JSON: {"field":"stage","equals":"Negotiation"}
+  actions     String   // JSON: [{"type":"send_telegram","message":"..."}]
+  enabled     Boolean  @default(true)
+  lastRun     DateTime? @map("last_run")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  creatorId   String?  @map("creator_id")
+  creator     User?    @relation(fields: [creatorId], references: [id])
+
+  executions  WorkflowExecution[]
+
+  @@map("workflows")
+}
+
+model WorkflowExecution {
+  id          String   @id @default(cuid())
+  workflowId  String   @map("workflow_id")
+  status      String   @default("success") // success | failed
+  triggerData String?  @map("trigger_data") // JSON snapshot of what triggered it
+  result      String?  // JSON result of actions
+  executedAt  DateTime @default(now()) @map("executed_at")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@map("workflow_executions")
+}
+
+// ─── Audit Log ──────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  status    String   // Success | Failed | Denied
+  details   String
+  severity  String   @default("Low") // Low | Medium | High
+  userId    String?  @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user     User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// ─── WhatsApp Sessions ──────────────────────────────────────
+
+model WhatsAppSession {
+  id            String   @id @default(cuid())
+  instanceName  String   @unique @map("instance_name")
+  status        String   @default("disconnected") // connected | disconnected | pairing
+  phone         String?
+  lastActive    DateTime? @map("last_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("whatsapp_sessions")
+}
+
+// ─── Telegram Config ────────────────────────────────────────
+
+model TelegramConfig {
+  id            String   @id @default(cuid())
+  botToken      String   @map("bot_token")
+  chatId        String?  @map("chat_id")
+  botName       String?  @map("bot_name")
+  isActive      Boolean  @default(false) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("telegram_config")
+}

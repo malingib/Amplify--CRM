@@ -92,7 +92,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm("Are you sure you want to remove this client?")) {
+        if (confirm("Remove client? This will permanently delete their record.")) {
             onUpdateClients(clients.filter(c => c.id !== id));
             if (selectedClientIds.has(id)) {
                 const newSet = new Set(selectedClientIds);
@@ -161,9 +161,9 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
     };
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col relative">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col relative">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Client Directory</h2>
                     <p className="text-slate-500 font-medium mt-1 text-sm">Manage your relationships and customer data.</p>
@@ -185,8 +185,8 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
             </div>
 
             {/* Filters & Search */}
-            <div className="bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm mb-6 flex flex-wrap items-center gap-4 shrink-0">
-                <div className="relative flex-1 min-w-[300px] group">
+            <div className="p-4 rounded-2xl mb-6 flex flex-wrap items-center gap-4 shrink-0">
+                <div className="relative flex-1 min-w-0 md:min-w-[300px] group">
                     <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                     <input 
                         type="text" 
@@ -240,12 +240,13 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
             </div>
 
             {/* Client List */}
-            <div className="flex-1 bg-white rounded-[32px] shadow-xl shadow-slate-200/40 border border-slate-200 overflow-hidden flex flex-col">
+            <div className="flex-1 rounded-3xl overflow-hidden flex flex-col">
                 <div className="overflow-y-auto custom-scrollbar flex-1 pb-24"> 
-                    <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[640px]">
                         <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th className="px-6 py-5 w-16 text-center">
+                                <th className="px-3 py-2 md:px-6 md:py-4 w-16 text-center">
                                     <button onClick={toggleSelectAll} className="flex items-center justify-center text-slate-400 hover:text-slate-900">
                                         {selectedClientIds.size === filteredClients.length && filteredClients.length > 0 ? (
                                             <CheckSquare className="w-5 h-5 text-slate-900" />
@@ -254,11 +255,11 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                         )}
                                     </button>
                                 </th>
-                                <th className="px-2 py-5">Client Name</th>
-                                <th className="px-6 py-5">Contact Info</th>
-                                <th className="px-6 py-5">Total Revenue</th>
-                                <th className="px-6 py-5">Status</th>
-                                <th className="px-6 py-5 text-right">Actions</th>
+                                <th className="px-1 py-2 md:px-2 md:py-4">Client Name</th>
+                                <th className="px-3 py-2 md:px-6 md:py-4">Contact Info</th>
+                                <th className="px-3 py-2 md:px-6 md:py-4">Total Revenue</th>
+                                <th className="px-3 py-2 md:px-6 md:py-4">Status</th>
+                                <th className="px-3 py-2 md:px-6 md:py-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -268,7 +269,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                     className={`hover:bg-slate-50/60 transition duration-200 group cursor-pointer ${selectedClientIds.has(client.id) ? 'bg-slate-50' : ''}`}
                                     onClick={() => setViewingClient(client)}
                                 >
-                                    <td className="px-6 py-5 text-center" onClick={(e) => { e.stopPropagation(); toggleSelect(client.id); }}>
+                                    <td className="px-3 py-2 md:px-6 md:py-4 text-center" onClick={(e) => { e.stopPropagation(); toggleSelect(client.id); }}>
                                         <button className="flex items-center justify-center">
                                             {selectedClientIds.has(client.id) ? (
                                                 <CheckSquare className="w-5 h-5 text-slate-900" />
@@ -277,7 +278,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                             )}
                                         </button>
                                     </td>
-                                    <td className="px-2 py-5">
+                                    <td className="px-1 py-2 md:px-2 md:py-4">
                                         <div className="flex items-center gap-4">
                                             <img src={client.avatar} className="w-12 h-12 rounded-2xl object-cover border border-slate-100 shadow-sm" alt={client.name} />
                                             <div>
@@ -288,7 +289,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5">
+                                    <td className="px-3 py-2 md:px-6 md:py-4">
                                         <div className="space-y-1">
                                             <p className="text-xs font-bold text-slate-700 flex items-center gap-2">
                                                 <Mail className="w-3 h-3 text-slate-400" /> {client.email}
@@ -298,11 +299,11 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                             </p>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-5">
+                                    <td className="px-3 py-2 md:px-6 md:py-4">
                                         <p className="font-bold text-slate-900 text-sm">KES {client.totalRevenue.toLocaleString()}</p>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Lifetime Value</p>
                                     </td>
-                                    <td className="px-6 py-5">
+                                    <td className="px-3 py-2 md:px-6 md:py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wide ${
                                             client.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                                             client.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
@@ -315,7 +316,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                             {client.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 text-right">
+                                    <td className="px-3 py-2 md:px-6 md:py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button 
                                                 className="p-2 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 text-slate-400 hover:text-blue-600 transition"
@@ -340,13 +341,14 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">
+                                    <td colSpan={6} className="px-3 py-8 md:px-6 md:py-12 text-center text-slate-400 font-medium">
                                         No clients found matching your filters.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 
                 {/* Pagination / Footer */}
@@ -386,7 +388,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
             {/* Add Client Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                          <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                         
                         <div className="mb-8">
@@ -415,7 +417,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                     onChange={e => setNewClient({...newClient, company: e.target.value})}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Email</label>
                                     <input 
@@ -437,7 +439,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Initial Revenue</label>
                                     <input 
@@ -485,7 +487,7 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
             {/* Bulk SMS Modal */}
             {isSmsModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                         <button onClick={() => setIsSmsModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                         
                         <div className="mb-6">
@@ -615,11 +617,11 @@ const Clients: React.FC<ClientsProps> = ({ clients, onUpdateClients }) => {
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                            <div className="p-4 rounded-2xl">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-2"><CreditCard className="w-3 h-3" /> Lifetime Value</p>
                                 <p className="text-2xl font-bold tracking-tight text-slate-900">KES {(viewingClient.totalRevenue || 0).toLocaleString()}</p>
                             </div>
-                            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                            <div className="p-4 rounded-2xl">
                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2"><Clock className="w-3 h-3" /> Last Activity</p>
                                 <p className="text-2xl font-bold text-slate-900 tracking-tight">{viewingClient.lastOrder}</p>
                             </div>

@@ -100,7 +100,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
     };
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto space-y-8 pb-24 min-h-screen">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto space-y-8 pb-24 min-h-screen">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                  <div className="flex items-center gap-3">
@@ -124,8 +124,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
             {activeTab === 'overview' && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                     {/* Metrics Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col relative overflow-hidden group">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="p-6 rounded-2xl hover:shadow-lg transition flex flex-col relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-purple-100 transition-colors"></div>
                             <div className="flex items-center justify-between mb-4 relative z-10">
                                 <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
@@ -139,7 +139,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col">
+                        <div className="p-6 rounded-2xl hover:shadow-lg transition flex flex-col">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                                     <Users className="w-6 h-6" />
@@ -154,7 +154,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-lg transition flex flex-col">
+                        <div className="p-6 rounded-2xl hover:shadow-lg transition flex flex-col">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
                                     <Activity className="w-6 h-6" />
@@ -170,9 +170,9 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 text-white p-6 rounded-[24px] shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden border border-slate-800">
+                        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden border border-slate-800">
                             <div className="flex items-center justify-between mb-4 relative z-10">
-                                <div className="p-3 bg-white/10 rounded-xl text-white backdrop-blur-md">
+                                <div className="p-3 bg-white/10 rounded-xl text-white">
                                     <Server className="w-6 h-6" />
                                 </div>
                                 <Zap className="w-5 h-5 text-yellow-400 fill-yellow-400" />
@@ -181,19 +181,19 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                                 <p className="text-3xl font-bold tracking-tight">24.5k</p>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">AI API Calls (Today)</p>
                             </div>
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
+
                         </div>
                     </div>
 
                     {/* Pending Requests Preview */}
-                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-sm p-8">
+                    <div className="rounded-3xl p-8">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="font-bold text-slate-900 text-lg">Pending Actions</h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {requests.filter(r => r.status === 'Pending').slice(0, 3).map(req => (
-                                <div key={req.id} className="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-start gap-3">
-                                    <div className="p-2 bg-white rounded-lg border border-slate-100 text-slate-500">
+                                <div key={req.id} className="p-4 rounded-2xl flex items-start gap-3">
+                                    <div className="p-2 rounded-lg text-slate-500">
                                         <AlertCircle className="w-5 h-5" />
                                     </div>
                                     <div>
@@ -204,7 +204,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                                 </div>
                             ))}
                             {requests.filter(r => r.status === 'Pending').length === 0 && (
-                                <div className="col-span-3 py-8 text-center text-slate-400 font-medium bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <div className="col-span-3 py-8 text-center text-slate-400 font-medium rounded-2xl">
                                     All caught up! No pending actions.
                                 </div>
                             )}
@@ -215,8 +215,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
 
             {/* TENANTS TAB */}
             {activeTab === 'tenants' && (
-                <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col min-h-[600px] animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div className="rounded-3xl overflow-hidden flex flex-col min-h-[600px] animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h3 className="font-bold text-slate-900 text-lg">Tenant Directory</h3>
                             <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Manage Accounts</p>
@@ -230,14 +230,14 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                                     placeholder="Search..." 
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200 transition" 
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-200 transition" 
                                  />
                              </div>
                              
                              <select 
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-purple-200"
+                                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-purple-200"
                              >
                                 <option value="All">All Status</option>
                                 <option value="Active">Active</option>
@@ -248,7 +248,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                              <select 
                                 value={planFilter}
                                 onChange={(e) => setPlanFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-purple-200"
+                                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 focus:outline-none focus:border-purple-200"
                              >
                                 <option value="All">All Plans</option>
                                 <option value="Starter">Starter</option>
@@ -341,7 +341,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
             {/* FINANCIALS TAB */}
             {activeTab === 'financials' && (
                 <div className="space-y-6 animate-in fade-in duration-500">
-                    <div className="flex justify-between items-center bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm">
+                    <div className="flex flex-wrap justify-between items-center p-4 md:p-6 rounded-2xl gap-4">
                         <div>
                              <h3 className="font-bold text-slate-900 text-lg">Payment History</h3>
                              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Global Transaction Ledger</p>
@@ -351,7 +351,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
+                    <div className="rounded-3xl overflow-hidden">
+                        <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full text-left border-collapse">
                             <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200">
                                 <tr>
@@ -384,6 +385,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                                 ))}
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             )}
@@ -391,8 +393,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
             {/* APPROVALS TAB */}
             {activeTab === 'approvals' && (
                 <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden">
-                        <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                    <div className="rounded-3xl overflow-hidden">
+                        <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/50">
                             <h3 className="font-bold text-slate-900 text-lg">System Requests</h3>
                             <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Pending Administrative Actions</p>
                         </div>
@@ -440,7 +442,7 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
             {/* Add Tenant Modal */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                         <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                         
                         <div className="mb-8">
@@ -538,12 +540,12 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ activeTab }) => {
                         </div>
                         
                         <div className="space-y-6 flex-1">
-                             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                             <div className="p-4 rounded-2xl flex items-center justify-between">
                                  <div>
                                      <p className="text-[10px] font-bold text-slate-400 uppercase">Current Status</p>
                                      <p className={`font-bold ${selectedTenant.status === 'Active' ? 'text-emerald-600' : 'text-red-600'}`}>{selectedTenant.status}</p>
                                  </div>
-                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100">
+                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center">
                                      <Activity className="w-5 h-5 text-slate-400" />
                                  </div>
                              </div>

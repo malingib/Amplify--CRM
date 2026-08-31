@@ -332,10 +332,10 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
             </div>
 
             {viewMode === 'terminal' ? (
-                <div className="flex-1 bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 flex flex-col overflow-hidden relative animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/40 flex flex-col overflow-hidden relative animate-in fade-in slide-in-from-bottom-4 duration-500">
                     
                     {/* Terminal Header */}
-                    <div className="bg-slate-50/80 backdrop-blur-xl p-6 border-b border-slate-200 flex justify-between items-center relative z-10">
+                     <div className="bg-slate-50/80 p-6 border-b border-slate-200 flex justify-between items-center relative z-10">
                         <div className="flex items-center gap-4">
                              <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-sm border-[2px] border-white ring-1 ring-slate-200">
                                  <Sparkles className="w-5 h-5 text-yellow-300" />
@@ -505,7 +505,7 @@ const WhatsAppChat: React.FC<WhatsAppChatProps> = ({ leads = [], onUpdateLeads, 
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 flex flex-col overflow-hidden animate-in fade-in duration-300">
+                <div className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/40 flex flex-col overflow-hidden animate-in fade-in duration-300">
                     {/* Audit Header */}
                     <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 justify-between items-center relative z-20">
                         <div className="flex items-center gap-3">

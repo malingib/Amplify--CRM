@@ -143,7 +143,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
   };
 
   const handleDelete = (id: string) => {
-      if (!confirm("Are you sure you want to delete this deal permanently?")) return;
+      if (!confirm("Delete deal? This action cannot be undone.")) return;
       const updatedLeads = leads.filter(l => l.id !== id);
       onUpdateLeads(updatedLeads);
       if (selectedLead?.id === id) setSelectedLead(null);
@@ -313,26 +313,26 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
   };
 
   return (
-    <div className="h-[calc(100vh-7rem)] p-6 lg:p-8 flex flex-col max-w-[1920px] mx-auto relative">
+    <div className="h-[calc(100vh-7rem)] p-4 md:p-6 lg:p-8 flex flex-col max-w-[1920px] mx-auto relative">
       
       {/* Header & Controls */}
       <div className="flex flex-col gap-6 mb-6 shrink-0">
           {/* ... existing header code ... */}
-          <div className="flex justify-between items-end">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Deals Pipeline</h2>
                 <p className="text-slate-500 font-medium mt-1 text-sm">Manage opportunities and forecast revenue.</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 flex-wrap">
                 <button 
                     onClick={onNavigateToAcquisition}
-                    className="bg-white text-emerald-600 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-50 border border-emerald-200 transition shadow-sm flex items-center gap-2 hover:shadow-md"
+                    className="bg-white text-emerald-600 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-emerald-50 border border-emerald-200 transition shadow-sm flex items-center gap-2 hover:shadow-md"
                 >
                     <Sparkles className="w-4 h-4" /> Lead Acquisition
                 </button>
                 <button 
                     onClick={() => openAddModal()}
-                    className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95 ring-2 ring-slate-100"
+                    className="bg-slate-900 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20 flex items-center gap-2 active:scale-95 ring-2 ring-slate-100"
                 >
                     <Plus className="w-4 h-4" /> New Deal
                 </button>
@@ -340,35 +340,35 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
           </div>
 
           {/* Metrics Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="p-3 md:p-4 rounded-xl md:rounded-2xl flex justify-between items-center">
                   <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pipeline Value</p>
-                      <p className="text-2xl font-bold text-slate-900">KES {metrics.totalValue.toLocaleString()}</p>
+                      <p className="text-lg md:text-2xl font-bold text-slate-900">KES {metrics.totalValue.toLocaleString()}</p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                   </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+              <div className="p-3 md:p-4 rounded-xl md:rounded-2xl flex justify-between items-center">
                   <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Weighted Value</p>
-                      <p className="text-2xl font-bold text-slate-900">KES {Math.round(metrics.weightedValue).toLocaleString()}</p>
+                      <p className="text-lg md:text-2xl font-bold text-slate-900">KES {Math.round(metrics.weightedValue).toLocaleString()}</p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
                       <BrainCircuit className="w-5 h-5" />
                   </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+              <div className="p-3 md:p-4 rounded-xl md:rounded-2xl flex justify-between items-center">
                   <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Deals</p>
-                      <p className="text-2xl font-bold text-slate-900">{metrics.count}</p>
+                      <p className="text-lg md:text-2xl font-bold text-slate-900">{metrics.count}</p>
                   </div>
                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
                       <LayoutGrid className="w-5 h-5" />
                   </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="p-3 md:p-4 rounded-xl md:rounded-2xl flex items-center gap-4">
                   <div className="flex-1">
                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Win Rate</p>
                        <div className="flex items-center gap-2">
@@ -382,7 +382,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
           </div>
 
           {/* Filters & View Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-2xl">
               <div className="flex items-center gap-3 flex-1 overflow-x-auto hide-scrollbar">
                   <div className="relative group min-w-[200px]">
                       <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
@@ -457,7 +457,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                         return (
                             <div 
                                 key={stage} 
-                                className={`w-[340px] flex flex-col h-full rounded-[24px] transition-colors duration-300 ${isOver ? 'bg-slate-100 ring-2 ring-blue-400' : 'bg-slate-50/50'}`}
+                                className={`w-[280px] sm:w-[340px] flex flex-col h-full rounded-2xl transition-colors duration-300 ${isOver ? 'bg-slate-100 ring-2 ring-blue-400' : 'bg-slate-50/50'}`}
                                 onDragOver={(e) => handleDragOverColumn(e, stage)}
                                 onDrop={(e) => handleDrop(e, stage)}
                             >
@@ -494,10 +494,10 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                                 onDragStart={(e) => handleDragStart(e, lead.id)}
                                                 onDragOver={(e) => handleDragOverLead(e, lead.id)}
                                                 onClick={() => setSelectedLead(lead)}
-                                                className={`bg-white p-4 rounded-2xl shadow-sm border cursor-pointer hover:shadow-lg transition-all duration-300 group relative ${
+                                                className={`p-4 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 group relative ${
                                                     draggedLeadId === lead.id ? 'opacity-50' : 'opacity-100'
                                                 } ${
-                                                    dragOverLeadId === lead.id ? 'border-t-4 border-t-blue-500 mt-2' : 'border-slate-200'
+                                                    dragOverLeadId === lead.id ? 'border-t-4 border-t-blue-500 mt-2' : ''
                                                 }`}
                                             >
                                                 {/* ... lead card content ... */}
@@ -602,8 +602,8 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
 
         {/* LIST VIEW */}
         {viewMode === 'list' && (
-            <div className="h-full bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="overflow-y-auto custom-scrollbar flex-1">
+            <div className="h-full rounded-2xl overflow-hidden flex flex-col">
+                <div className="overflow-y-auto custom-scrollbar flex-1 overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         {/* ... existing table code ... */}
                         <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 backdrop-blur-sm z-10">
@@ -668,7 +668,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
       {isAddModalOpen && (
           <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
               {/* ... existing modal code ... */}
-              <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+              <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                   <button onClick={closeModal} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                   <div className="mb-6">
                       <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{editingId ? 'Edit Deal' : 'New Opportunity'}</h3>
@@ -680,7 +680,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                           <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Deal Name</label>
                           <input type="text" value={newDeal.name} onChange={e => setNewDeal({...newDeal, name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none text-sm focus:ring-2 focus:ring-blue-100" placeholder="e.g. Annual Service Contract" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
                               <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Client Company</label>
                               <input type="text" value={newDeal.company} onChange={e => setNewDeal({...newDeal, company: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none text-sm" placeholder="Acme Corp" />
@@ -690,7 +690,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                               <input type="number" value={newDeal.value} onChange={e => setNewDeal({...newDeal, value: parseInt(e.target.value) || 0})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none text-sm" />
                           </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
                                <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Email</label>
                                <input type="email" value={newDeal.email || ''} onChange={e => setNewDeal({...newDeal, email: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none text-sm" placeholder="client@email.com" />
@@ -721,10 +721,10 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
       {selectedLead && (
         <>
             <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 animate-in fade-in duration-300" onClick={() => setSelectedLead(null)} />
-            <div className="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200">
+            <div className="fixed top-0 right-0 h-full w-full max-w-lg shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200">
                 
                 {/* Header */}
-                <div className="p-8 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+                <div className="p-8 border-b border-slate-100 flex justify-between items-start">
                     <div className="flex gap-4">
                         <img src={selectedLead.avatar} className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-sm" alt="" />
                         <div>
@@ -770,7 +770,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                     {activeDetailTab === 'details' && (
                         <div className="space-y-8">
                              {/* Actions Row */}
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 gap-2">
                                 <button onClick={() => addActivity('Call', 'Logged outbound call')} className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-blue-50 hover:border-blue-100 hover:text-blue-600 transition group">
                                     <Phone className="w-5 h-5 text-slate-400 group-hover:text-blue-600" />
                                     <span className="text-[10px] font-bold uppercase">Call</span>
@@ -790,11 +790,11 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 rounded-2xl bg-white border border-slate-200">
+                                <div className="p-4 rounded-2xl">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Deal Value</p>
                                     <p className="text-xl font-bold text-slate-900">KES {selectedLead.value.toLocaleString()}</p>
                                 </div>
-                                <div className="p-4 rounded-2xl bg-white border border-slate-200">
+                                <div className="p-4 rounded-2xl">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Probability</p>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -900,7 +900,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                                 <span className="text-xs font-bold text-slate-900">{log.type}</span>
                                                 <span className="text-[10px] text-slate-400 font-medium">{new Date(log.date).toLocaleString()}</span>
                                             </div>
-                                            <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm text-sm text-slate-600 leading-relaxed">
+                                            <div className="p-3 rounded-xl text-sm text-slate-600 leading-relaxed">
                                                 {log.content}
                                             </div>
                                         </div>
@@ -947,7 +947,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                                             {selectedLead.qualificationSummary}
                                         </p>
                                     </div>
-                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
+
                                 </div>
                             ) : (
                                 <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -959,7 +959,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                             )}
 
                             {/* Automated Follow-Up Generator */}
-                            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                            <div className="rounded-2xl p-5">
                                 <div className="flex justify-between items-center mb-4">
                                     <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                                         <MessageSquare className="w-4 h-4 text-emerald-500" />
@@ -1047,7 +1047,7 @@ const Pipeline: React.FC<PipelineProps> = ({ leads, onUpdateLeads, onCreatePropo
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-slate-100 bg-white flex justify-between items-center shrink-0">
+                <div className="p-6 border-t border-slate-100 flex justify-between items-center shrink-0">
                     <button onClick={() => openEditModal(selectedLead)} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-xs font-bold">
                         <Edit2 className="w-4 h-4" /> Edit Details
                     </button>

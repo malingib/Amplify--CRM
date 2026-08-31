@@ -47,9 +47,9 @@ const EtimsCompliance: React.FC = () => {
     const vatLiability = invoices.filter(i => i.etimsCompliant).reduce((acc, curr) => acc + (curr.amount * 0.16), 0);
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto min-h-[calc(100vh-2rem)] flex flex-col">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto min-h-[calc(100vh-2rem)] flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8 shrink-0">
+            <div className="flex flex-wrap justify-between items-end gap-4 mb-8 shrink-0">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                         <span className="bg-emerald-600 text-white p-2 rounded-xl shadow-lg shadow-emerald-600/20">
@@ -71,36 +71,36 @@ const EtimsCompliance: React.FC = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 shrink-0">
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 shrink-0">
+                <div className="p-4 md:p-6 rounded-2xl flex items-center justify-between">
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Compliance Rate</p>
                         <div className="flex items-baseline gap-1 mt-1">
                             <p className="text-3xl font-bold text-slate-900">{Math.round((compliantCount / invoices.length) * 100)}%</p>
                         </div>
                     </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
                         <FileCheck className="w-6 h-6" />
                     </div>
                 </div>
                 
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm flex items-center justify-between">
+                <div className="p-4 md:p-6 rounded-2xl flex items-center justify-between">
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">VAT Output Tax (16%)</p>
                         <p className="text-3xl font-bold text-slate-900 mt-1">KES {vatLiability.toLocaleString()}</p>
                     </div>
-                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shrink-0">
                         <Receipt className="w-6 h-6" />
                     </div>
                 </div>
 
-                <div className="bg-slate-900 text-white p-6 rounded-[24px] shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden">
+                <div className="bg-slate-900 text-white p-4 md:p-6 rounded-2xl shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden">
                     <div className="relative z-10 flex justify-between items-start">
                         <div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Transmission</p>
                             <p className="text-3xl font-bold mt-1">{invoices.length - compliantCount}</p>
                         </div>
-                        <div className="p-2 bg-white/10 rounded-xl">
+                        <div className="p-2 bg-white/10 rounded-xl shrink-0">
                             <AlertTriangle className="w-5 h-5 text-amber-400" />
                         </div>
                     </div>
@@ -114,95 +114,97 @@ const EtimsCompliance: React.FC = () => {
             </div>
 
             {/* Invoice List */}
-            <div className="flex-1 bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <div className="flex gap-2">
+            <div className="flex-1 rounded-3xl overflow-hidden flex flex-col">
+                <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/50 flex flex-wrap justify-between items-center gap-3">
+                    <div className="flex gap-2 flex-wrap">
                         <button 
                             onClick={() => setFilter('All')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filter === 'All' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filter === 'All' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                             All Invoices
                         </button>
                         <button 
                             onClick={() => setFilter('Pending')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filter === 'Pending' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${filter === 'Pending' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'text-slate-600 hover:bg-slate-50'}`}
                         >
                             Pending KRA
                         </button>
                     </div>
-                    <div className="relative w-64">
+                    <div className="relative w-full sm:w-64">
                         <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400" />
-                        <input type="text" placeholder="Search invoice #" className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
+                        <input type="text" placeholder="Search invoice #" className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-100 transition" />
                     </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 backdrop-blur-sm z-10">
-                            <tr>
-                                <th className="px-6 py-4">Invoice Details</th>
-                                <th className="px-6 py-4">Client</th>
-                                <th className="px-6 py-4">Amount</th>
-                                <th className="px-6 py-4">KRA Status</th>
-                                <th className="px-6 py-4">Control Unit Serial</th>
-                                <th className="px-6 py-4 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filteredInvoices.map(inv => (
-                                <tr key={inv.id} className="hover:bg-slate-50/50 transition group">
-                                    <td className="px-6 py-4">
-                                        <p className="font-bold text-slate-900 text-sm">{inv.invoiceNumber}</p>
-                                        <p className="text-[10px] text-slate-500 font-medium">{inv.date}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="font-bold text-slate-700 text-xs">{inv.clientName}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="font-bold text-slate-900 text-sm">KES {inv.amount.toLocaleString()}</p>
-                                        <p className="text-[10px] text-slate-400">VAT: KES {(inv.amount * 0.16).toLocaleString()}</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {inv.etimsCompliant ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold uppercase">
-                                                <CheckCircle2 className="w-3.5 h-3.5" /> Verified
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold uppercase">
-                                                <AlertTriangle className="w-3.5 h-3.5" /> Pending
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-xs font-mono text-slate-600">
-                                        {inv.cuSerialNumber || '---'}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        {inv.etimsCompliant ? (
-                                            <button 
-                                                onClick={() => setShowReceipt(inv)}
-                                                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-50 transition"
-                                            >
-                                                View Receipt
-                                            </button>
-                                        ) : (
-                                            <button 
-                                                onClick={() => handleTransmit(inv.id)}
-                                                disabled={transmittingId === inv.id}
-                                                className="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg text-xs hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 ml-auto disabled:opacity-70 disabled:cursor-not-allowed"
-                                            >
-                                                {transmittingId === inv.id ? (
-                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                                ) : (
-                                                    <Server className="w-3.5 h-3.5" />
-                                                )}
-                                                {transmittingId === inv.id ? 'Signing...' : 'Sign Invoice'}
-                                            </button>
-                                        )}
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[600px]">
+                            <thead className="bg-slate-50/80 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 backdrop-blur-sm z-10">
+                                <tr>
+                                    <th className="px-3 md:px-6 py-4">Invoice Details</th>
+                                    <th className="px-3 md:px-6 py-4">Client</th>
+                                    <th className="px-3 md:px-6 py-4">Amount</th>
+                                    <th className="px-3 md:px-6 py-4">KRA Status</th>
+                                    <th className="px-3 md:px-6 py-4">Control Unit Serial</th>
+                                    <th className="px-3 md:px-6 py-4 text-right">Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filteredInvoices.map(inv => (
+                                    <tr key={inv.id} className="hover:bg-slate-50/50 transition group">
+                                        <td className="px-3 md:px-6 py-4">
+                                            <p className="font-bold text-slate-900 text-sm">{inv.invoiceNumber}</p>
+                                            <p className="text-[10px] text-slate-500 font-medium">{inv.date}</p>
+                                        </td>
+                                        <td className="px-3 md:px-6 py-4">
+                                            <p className="font-bold text-slate-700 text-xs">{inv.clientName}</p>
+                                        </td>
+                                        <td className="px-3 md:px-6 py-4">
+                                            <p className="font-bold text-slate-900 text-sm">KES {inv.amount.toLocaleString()}</p>
+                                            <p className="text-[10px] text-slate-400">VAT: KES {(inv.amount * 0.16).toLocaleString()}</p>
+                                        </td>
+                                        <td className="px-3 md:px-6 py-4">
+                                            {inv.etimsCompliant ? (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold uppercase">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold uppercase">
+                                                    <AlertTriangle className="w-3.5 h-3.5" /> Pending
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 md:px-6 py-4 text-xs font-mono text-slate-600">
+                                            {inv.cuSerialNumber || '---'}
+                                        </td>
+                                        <td className="px-3 md:px-6 py-4 text-right">
+                                            {inv.etimsCompliant ? (
+                                                <button 
+                                                    onClick={() => setShowReceipt(inv)}
+                                                    className="px-4 py-2 text-slate-600 font-bold rounded-lg text-xs hover:bg-slate-50 transition"
+                                                >
+                                                    View Receipt
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleTransmit(inv.id)}
+                                                    disabled={transmittingId === inv.id}
+                                                    className="px-4 py-2 bg-emerald-600 text-white font-bold rounded-lg text-xs hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 ml-auto disabled:opacity-70 disabled:cursor-not-allowed"
+                                                >
+                                                    {transmittingId === inv.id ? (
+                                                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Server className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {transmittingId === inv.id ? 'Signing...' : 'Sign Invoice'}
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -212,20 +214,20 @@ const EtimsCompliance: React.FC = () => {
                     <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden relative">
                         <div className="bg-slate-900 p-6 text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                                 <Receipt className="w-6 h-6 text-slate-900" />
                             </div>
                             <h3 className="text-white font-bold text-lg">Fiscal Receipt</h3>
                             <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">Kenya Revenue Authority</p>
                         </div>
                         
-                        <div className="p-8 text-center space-y-6">
+                        <div className="p-4 md:p-8 text-center space-y-6">
                             <div>
                                 <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-1">Invoice Amount</p>
                                 <p className="text-3xl font-bold text-slate-900">KES {showReceipt.amount.toLocaleString()}</p>
                             </div>
 
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-left space-y-3">
+                            <div className="p-4 rounded-2xl text-left space-y-3">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-slate-500 font-bold">CU Serial</span>
                                     <span className="font-mono font-bold text-slate-900">{showReceipt.cuSerialNumber}</span>

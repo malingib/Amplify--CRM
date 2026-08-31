@@ -1,8 +1,10 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, MoreHorizontal, ArrowUpRight, Sparkles, LogOut, Shield, Bell, CreditCard, Settings as SettingsIcon, Save, X, Edit2 } from 'lucide-react';
 import { UserRole } from '../types';
+import { useAuth } from './AuthProvider';
+import { authApi } from '../src/api/client';
 
 interface ProfileProps {
     userRole?: UserRole;
@@ -10,38 +12,64 @@ interface ProfileProps {
 }
 
 const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) => {
+    const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [profileData, setProfileData] = useState({
-        name: 'Eva Robinson',
-        role: 'CEO, Inc. Alabama Machinery & Supply',
-        email: 'eva@alabamamachinery.com',
-        phone: '+254 712 345 678',
-        address: 'Westlands, Nairobi',
-        website: 'www.alabamamachinery.com'
+        name: '',
+        role: '',
+        email: '',
+        phone: '',
+        address: '',
+        website: ''
     });
+
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                name: user.name || '',
+                role: userRole,
+                email: user.email || '',
+                phone: '',
+                address: '',
+                website: ''
+            });
+        }
+    }, [user, userRole]);
 
     const handleChange = (field: string, value: string) => {
         setProfileData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = () => {
-        setIsEditing(false);
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await authApi.updateProfile({ name: profileData.name, phone: profileData.phone });
+            setIsEditing(false);
+        } catch (err) {
+            console.error('Failed to update profile:', err);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleCancel = () => {
         setIsEditing(false);
+        if (user) {
+            setProfileData(prev => ({ ...prev, name: user.name, email: user.email }));
+        }
     };
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-8 pb-24">
-        <div className="flex justify-between items-end mb-2">
+    <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-8 pb-24">
+        <div className="flex flex-wrap justify-between items-end mb-2 gap-4">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">User Profile</h2>
                 <p className="text-slate-500 font-medium mt-1 text-sm">Manage your personal information and account settings.</p>
             </div>
             {isEditing ? (
                 <div className="flex gap-2">
-                    <button onClick={handleCancel} className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition flex items-center gap-2 shadow-sm hover:shadow-md text-xs">
+                    <button onClick={handleCancel} className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition flex items-center gap-2 hover:shadow-md text-xs">
                         <X className="w-3.5 h-3.5" /> Cancel
                     </button>
                     <button onClick={handleSave} className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition flex items-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95 text-xs">
@@ -49,7 +77,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                     </button>
                 </div>
             ) : (
-                <button onClick={() => setIsEditing(true)} className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 shadow-sm hover:shadow-md text-xs">
+                <button onClick={() => setIsEditing(true)} className="px-5 py-2.5 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 hover:shadow-md text-xs">
                     <Edit2 className="w-3.5 h-3.5" /> Edit Profile
                 </button>
             )}
@@ -57,7 +85,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
 
         {/* Role Switcher for Demo */}
         {onRoleChange && (
-            <div className="bg-blue-50 border border-blue-100 rounded-[24px] p-6 flex flex-col items-center justify-between gap-4">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col items-center justify-between gap-4">
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
                         <Shield className="w-6 h-6" />
@@ -85,12 +113,12 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
             </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             {/* Main Profile Card */}
             <div className="lg:col-span-4">
-                <div className="bg-white rounded-[32px] p-8 flex flex-col items-center text-center relative sticky top-6 border border-slate-200 shadow-xl shadow-slate-200/40">
+                <div className="rounded-3xl p-6 md:p-8 flex flex-col items-center text-center relative sticky top-6">
                     <div className="absolute top-4 right-4 flex gap-2">
-                        <button className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-800 transition shadow-sm border border-slate-100 hover:bg-white"><MoreHorizontal className="w-4 h-4" /></button>
+                        <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition hover:bg-white"><MoreHorizontal className="w-4 h-4" /></button>
                     </div>
 
                     <div className="w-32 h-32 rounded-full border-[6px] border-slate-50 shadow-2xl shadow-slate-200 mb-6 overflow-hidden relative group cursor-pointer mt-4">
@@ -123,9 +151,9 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                     )}
 
                     <div className="flex gap-3 mb-8 w-full justify-center">
-                        <button className="p-3 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Sparkles className="w-5 h-5 group-hover:text-yellow-500 transition-colors" /></button>
-                        <button className="p-3 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Mail className="w-5 h-5 group-hover:text-blue-500 transition-colors" /></button>
-                        <button className="p-3 rounded-2xl bg-slate-50 shadow-sm border border-slate-100 hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Phone className="w-5 h-5 group-hover:text-green-500 transition-colors" /></button>
+                        <button className="p-3 rounded-2xl hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Sparkles className="w-5 h-5 group-hover:text-yellow-500 transition-colors" /></button>
+                        <button className="p-3 rounded-2xl hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Mail className="w-5 h-5 group-hover:text-blue-500 transition-colors" /></button>
+                        <button className="p-3 rounded-2xl hover:shadow-md hover:bg-white hover:scale-110 transition text-slate-600 group"><Phone className="w-5 h-5 group-hover:text-green-500 transition-colors" /></button>
                     </div>
 
                     <div className="w-full text-left space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
@@ -163,11 +191,11 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
             <div className="lg:col-span-8 space-y-8">
                 
                 {/* Contact Information */}
-                <div className="bg-white rounded-[32px] p-8 border border-slate-200 shadow-xl shadow-slate-200/40">
+                <div className="rounded-3xl p-6 md:p-8">
                     <div className="flex justify-between items-center mb-6">
                          <h4 className="font-bold text-xl text-slate-900 tracking-tight">Contact Information</h4>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                         <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 transition hover:border-slate-200 group">
                             <p className="text-[10px] text-slate-400 font-bold uppercase mb-2 tracking-widest group-hover:text-slate-600 transition-colors">Email Address</p>
                             {isEditing ? (
@@ -224,11 +252,11 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                 </div>
 
                 {/* Account Settings */}
-                <div className="bg-white rounded-[32px] p-8 border border-slate-200 shadow-xl shadow-slate-200/40">
+                <div className="rounded-3xl p-6 md:p-8">
                     <h4 className="font-bold text-xl text-slate-900 mb-6 tracking-tight">Account Settings</h4>
                     
                     <div className="space-y-4">
-                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md">
+                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 hover:shadow-md">
                             <div className="flex items-center gap-6">
                                 <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 group-hover:scale-105 transition-transform">
                                     <Shield className="w-6 h-6" />
@@ -238,12 +266,12 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                                     <p className="text-xs text-slate-500 font-medium mt-0.5">Manage 2FA and password settings</p>
                                 </div>
                             </div>
-                            <div className="bg-white p-3 rounded-full border border-slate-100 group-hover:border-slate-200 shadow-sm">
+                            <div className="p-3 rounded-full border border-slate-100 group-hover:border-slate-200">
                                 <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition" />
                             </div>
                         </button>
 
-                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md">
+                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 hover:shadow-md">
                             <div className="flex items-center gap-6">
                                 <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 group-hover:scale-105 transition-transform">
                                     <Bell className="w-6 h-6" />
@@ -253,12 +281,12 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                                     <p className="text-xs text-slate-500 font-medium mt-0.5">Customize alerts</p>
                                 </div>
                             </div>
-                            <div className="bg-white p-3 rounded-full border border-slate-100 group-hover:border-slate-200 shadow-sm">
+                            <div className="p-3 rounded-full border border-slate-100 group-hover:border-slate-200">
                                 <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition" />
                             </div>
                         </button>
 
-                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md">
+                        <button className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-slate-50 transition group border border-slate-100 hover:border-slate-200 hover:shadow-md">
                             <div className="flex items-center gap-6">
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-105 transition-transform">
                                     <CreditCard className="w-6 h-6" />
@@ -268,7 +296,7 @@ const Profile: React.FC<ProfileProps> = ({ userRole = 'Admin', onRoleChange }) =
                                     <p className="text-xs text-slate-500 font-medium mt-0.5">Manage subscriptions</p>
                                 </div>
                             </div>
-                            <div className="bg-white p-3 rounded-full border border-slate-100 group-hover:border-slate-200 shadow-sm">
+                            <div className="p-3 rounded-full border border-slate-100 group-hover:border-slate-200">
                                 <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition" />
                             </div>
                         </button>

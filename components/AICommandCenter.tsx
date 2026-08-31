@@ -139,7 +139,7 @@ const AICommandCenter: React.FC<AICommandCenterProps> = ({ leads = [], onUpdateL
         return (
             <button 
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-8 right-8 w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-[100] group ring-4 ring-white"
+                className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl hover:scale-110 transition-all duration-300 flex items-center justify-center z-[100] group ring-4 ring-white"
             >
                 <Sparkles className="w-6 h-6 group-hover:animate-pulse text-yellow-400" />
                 <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white"></span>
@@ -148,11 +148,11 @@ const AICommandCenter: React.FC<AICommandCenterProps> = ({ leads = [], onUpdateL
     }
 
     return (
-        <div className={`fixed bottom-8 right-8 bg-white rounded-[32px] shadow-2xl border border-slate-200 z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 ring-1 ring-slate-900/5 transition-all duration-300 ${isExpanded ? 'w-[450px] h-[700px]' : 'w-[360px] h-[550px]'}`}>
+        <div className={`fixed bottom-4 right-4 md:bottom-8 md:right-8 bg-white rounded-3xl shadow-2xl border border-slate-200 z-[100] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 fade-in duration-300 ring-1 ring-slate-900/5 transition-all duration-300 ${isExpanded ? 'w-[calc(100vw-2rem)] md:w-[450px] h-[700px]' : 'w-[calc(100vw-2rem)] md:w-[360px] h-[550px]'}`}>
             {/* Header */}
             <div className="bg-slate-900 p-4 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+                     <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
                         <Terminal className="w-4 h-4 text-yellow-300" />
                     </div>
                     <div>
@@ -174,7 +174,7 @@ const AICommandCenter: React.FC<AICommandCenterProps> = ({ leads = [], onUpdateL
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 bg-slate-50 p-4 overflow-y-auto space-y-4 custom-scrollbar" ref={scrollRef}>
+            <div className="flex-1 bg-slate-50 p-3 md:p-4 overflow-y-auto space-y-4 custom-scrollbar" ref={scrollRef}>
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         {msg.role === 'system' ? (

@@ -90,9 +90,9 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
+    <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-end mb-8 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 shrink-0">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Catalogue & Services</h2>
                 <p className="text-slate-500 font-medium mt-1 text-sm">Manage your product lines and service offerings.</p>
@@ -114,8 +114,8 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-[24px] border border-slate-200 shadow-sm mb-6 flex flex-wrap items-center gap-4 shrink-0">
-             <div className="relative flex-1 min-w-[300px] group">
+        <div className="p-4 rounded-2xl mb-6 flex flex-wrap items-center gap-4 shrink-0">
+             <div className="relative flex-1 min-w-0 md:min-w-[300px] group">
                 <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                 <input 
                     type="text" 
@@ -144,9 +144,9 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
 
         {/* Grid Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {filteredItems.map(item => (
-                    <div key={item.id} className="bg-white rounded-[24px] border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col overflow-hidden hover:-translate-y-1">
+                    <div key={item.id} className="rounded-2xl hover:shadow-lg transition-all duration-300 group flex flex-col overflow-hidden hover:-translate-y-1">
                         <div className="h-32 bg-slate-50 relative border-b border-slate-100">
                             {item.image ? (
                                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -156,7 +156,7 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
                                 </div>
                             )}
                             <div className="absolute top-4 right-4">
-                                <button className="p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white shadow-sm border border-slate-100 transition">
+                                 <button className="p-2 bg-white/80 rounded-full hover:bg-white shadow-sm border border-slate-100 transition">
                                     <MoreHorizontal className="w-4 h-4 text-slate-500" />
                                 </button>
                             </div>
@@ -169,7 +169,7 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
                             </div>
                         </div>
                         
-                        <div className="p-5 flex-1 flex flex-col">
+                        <div className="p-4 md:p-5 flex-1 flex flex-col">
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="font-bold text-slate-900 text-base leading-tight">{item.name}</h3>
                             </div>
@@ -193,9 +193,9 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
                 {/* Empty State for Add */}
                 <button 
                     onClick={() => setIsAddModalOpen(true)}
-                    className="border-2 border-dashed border-slate-200 rounded-[24px] flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition min-h-[280px] gap-4 group"
+                    className="border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition min-h-[280px] gap-4 group"
                 >
-                    <div className="w-16 h-16 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Plus className="w-6 h-6" />
                     </div>
                     <span className="font-bold text-sm">Add New Item</span>
@@ -206,7 +206,7 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
         {/* Add Item Modal */}
         {isAddModalOpen && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-lg rounded-[32px] shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
+                <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 border border-slate-200 animate-in zoom-in-95 duration-300 relative">
                      <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
                     
                     <div className="mb-8">
@@ -225,7 +225,7 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
                                 onChange={e => setNewItem({...newItem, name: e.target.value})}
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">Category</label>
                                 <select 
@@ -271,7 +271,7 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
         {/* AI Discovery Modal */}
         {showDiscoveryModal && (
              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-                <div className="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl flex flex-col overflow-hidden border border-slate-200 max-h-[90vh]">
+                <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 max-h-[90vh]">
                     <div className="bg-slate-900 p-6 flex justify-between items-center shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
@@ -346,8 +346,8 @@ const Catalogue: React.FC<CatalogueProps> = ({ items, onUpdateItems }) => {
 
                                 <div className="space-y-3">
                                     {detectedItems.length > 0 ? detectedItems.map((item, idx) => (
-                                        <div key={item.id || idx} className="flex gap-4 p-4 rounded-2xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 group">
-                                            <div className="w-12 h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center shrink-0">
+                                        <div key={item.id || idx} className="flex gap-4 p-4 rounded-2xl bg-slate-50/50 group">
+                                            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
                                                 {item.category === 'Product' ? <Package className="w-5 h-5 text-slate-400" /> : <Tag className="w-5 h-5 text-slate-400" />}
                                             </div>
                                             <div className="flex-1">

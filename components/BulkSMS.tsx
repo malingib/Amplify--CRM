@@ -1,16 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, Clock, CheckCircle, AlertCircle, Plus, Search, Filter, MessageSquare, Calendar, X, Loader2, Smartphone, Users, ChevronRight, Zap } from 'lucide-react';
 import { sendBulkSms } from '../services/smsService';
+import { clientsApi } from '../src/api/client';
 import { Client } from '../types';
-
-// Mock Clients Data (In a real app, this would come from a global store or API)
-const mockClients: Client[] = [
-    { id: '1', name: 'Wanjiku Trading', company: 'Wanjiku Ltd', email: 'info@wanjiku.co.ke', phone: '+254711222333', status: 'Active', lastOrder: '2023-10-25', totalRevenue: 1250000, avatar: '', industry: 'Textiles' },
-    { id: '2', name: 'TechSahara', company: 'Sahara Systems', email: 'procurement@techsahara.com', phone: '+254722444555', status: 'Active', lastOrder: '2023-10-20', totalRevenue: 3400000, avatar: '', industry: 'Technology' },
-    { id: '3', name: 'GreenGrocers', company: 'GG Exporters', email: 'orders@greengrocers.ke', phone: '+254733666777', status: 'Pending', lastOrder: '2023-09-15', totalRevenue: 450000, avatar: '', industry: 'Agriculture' },
-    { id: '4', name: 'Nairobi Logistics', company: 'NL Group', email: 'director@nlogistics.com', phone: '+254744888999', status: 'Inactive', lastOrder: '2023-08-10', totalRevenue: 890000, avatar: '', industry: 'Logistics' },
-    { id: '5', name: 'Mombasa Marine', company: 'Blue Ocean Ltd', email: 'sales@blueocean.co.ke', phone: '+254755111222', status: 'Active', lastOrder: '2023-10-28', totalRevenue: 5600000, avatar: '', industry: 'Maritime' }
-];
 
 const templates = [
     { id: 1, title: 'Payment Reminder', text: 'Hello, this is a gentle reminder that your invoice #INV-001 is overdue. Please pay via M-Pesa Paybill 123456.' },
@@ -29,6 +21,16 @@ const BulkSMS: React.FC = () => {
     const [campaigns, setCampaigns] = useState(initialCampaigns);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [loadingClients, setLoadingClients] = useState(true);
+
+    useEffect(() => {
+        clientsApi.list().then((res: any) => {
+            setClients(res.clients || []);
+        }).catch(() => {
+            // fall back to empty list on error
+        }).finally(() => setLoadingClients(false));
+    }, []);
     
     // New Campaign State
     const [audienceType, setAudienceType] = useState<'all' | 'industry' | 'manual'>('all');
@@ -38,8 +40,8 @@ const BulkSMS: React.FC = () => {
     const [scheduleDate, setScheduleDate] = useState('');
     
     const getRecipientCount = () => {
-        if (audienceType === 'all') return mockClients.length;
-        if (audienceType === 'industry') return mockClients.filter(c => c.industry === selectedIndustry).length;
+        if (audienceType === 'all') return clients.length;
+        if (audienceType === 'industry') return clients.filter(c => c.industry === selectedIndustry).length;
         if (audienceType === 'manual') return manualNumbers.split(',').filter(n => n.trim().length > 5).length;
         return 0;
     };
@@ -50,8 +52,8 @@ const BulkSMS: React.FC = () => {
 
         // Gather Recipients
         let recipients: string[] = [];
-        if (audienceType === 'all') recipients = mockClients.map(c => c.phone);
-        else if (audienceType === 'industry') recipients = mockClients.filter(c => c.industry === selectedIndustry).map(c => c.phone);
+        if (audienceType === 'all') recipients = clients.map(c => c.phone);
+        else if (audienceType === 'industry') recipients = clients.filter(c => c.industry === selectedIndustry).map(c => c.phone);
         else if (audienceType === 'manual') recipients = manualNumbers.split(',').map(n => n.trim());
 
         // API Call
@@ -82,15 +84,15 @@ const BulkSMS: React.FC = () => {
     };
 
     return (
-        <div className="p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1800px] mx-auto h-[calc(100vh-2rem)] flex flex-col">
             {/* Header */}
-            <div className="flex justify-between items-end mb-8 shrink-0">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 shrink-0 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Bulk SMS Marketing</h2>
                     <p className="text-slate-500 font-medium mt-1 text-sm">Create and track SMS campaigns.</p>
                 </div>
                 <div className="flex gap-3">
-                     <button className="px-5 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition flex items-center gap-2 shadow-sm text-sm">
+                     <button className="px-5 py-3 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition flex items-center gap-2 text-sm">
                         <Filter className="w-4 h-4" /> Filter
                     </button>
                     <button 
@@ -103,11 +105,11 @@ const BulkSMS: React.FC = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 shrink-0">
-                <div className="bg-slate-900 text-white p-6 rounded-[24px] shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden group">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8 shrink-0">
+                <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl shadow-slate-900/10 flex flex-col relative overflow-hidden group">
                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl group-hover:bg-white/10 transition-colors"></div>
                      <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-white/10 rounded-xl backdrop-blur-md">
+                         <div className="p-3 bg-white/10 rounded-xl">
                             <MessageSquare className="w-6 h-6 text-white" />
                         </div>
                         <span className="text-xs font-bold bg-emerald-500 text-white px-2 py-1 rounded-md">Healthy</span>
@@ -118,7 +120,7 @@ const BulkSMS: React.FC = () => {
                      </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div className="p-6 rounded-2xl hover:shadow-md transition">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                             <Send className="w-6 h-6" />
@@ -129,7 +131,7 @@ const BulkSMS: React.FC = () => {
                     <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> 100% Delivery</p>
                 </div>
 
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-md transition">
+                <div className="p-6 rounded-2xl hover:shadow-md transition">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
                             <Clock className="w-6 h-6" />
@@ -140,7 +142,7 @@ const BulkSMS: React.FC = () => {
                     <p className="text-xs font-bold text-slate-500 mt-2">Upcoming Campaigns</p>
                 </div>
 
-                 <div className="bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm hover:shadow-md transition">
+                 <div className="p-6 rounded-2xl hover:shadow-md transition">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="p-3 bg-red-50 text-red-600 rounded-xl">
                             <AlertCircle className="w-6 h-6" />
@@ -153,12 +155,12 @@ const BulkSMS: React.FC = () => {
             </div>
 
             {/* Campaign History */}
-            <div className="flex-1 bg-white rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col">
+            <div className="flex-1 rounded-3xl overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <h3 className="font-bold text-slate-900 text-lg">Recent Campaigns</h3>
                     <div className="relative w-64">
                          <Search className="absolute left-4 top-3 w-4 h-4 text-slate-400" />
-                         <input type="text" placeholder="Search history..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-slate-200" />
+                         <input type="text" placeholder="Search history..." className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-slate-200" />
                     </div>
                 </div>
                 
@@ -210,10 +212,10 @@ const BulkSMS: React.FC = () => {
             {/* Compose Modal */}
             {isModalOpen && (
                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-5xl h-[80vh] rounded-[32px] shadow-2xl flex overflow-hidden border border-slate-200">
+                    <div className="bg-white w-full max-w-5xl h-[90vh] md:h-[80vh] rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-slate-200">
                         
                         {/* Left: Configuration */}
-                        <div className="w-[60%] p-8 overflow-y-auto flex flex-col bg-white">
+                        <div className="w-full md:w-[60%] p-4 md:p-8 overflow-y-auto flex flex-col bg-white">
                              <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h3 className="text-2xl font-bold text-slate-900 tracking-tight">New Campaign</h3>
@@ -225,14 +227,14 @@ const BulkSMS: React.FC = () => {
                                 {/* Audience Selection */}
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Select Audience</label>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <button 
                                             onClick={() => setAudienceType('all')}
                                             className={`p-4 rounded-2xl border text-left transition ${audienceType === 'all' ? 'border-slate-900 bg-slate-900 text-white shadow-lg' : 'border-slate-200 hover:bg-slate-50 text-slate-700'}`}
                                         >
                                             <div className="mb-2"><Users className="w-5 h-5" /></div>
                                             <p className="font-bold text-sm">All Contacts</p>
-                                            <p className={`text-[10px] font-bold mt-1 ${audienceType === 'all' ? 'text-slate-400' : 'text-slate-400'}`}>{mockClients.length} Recipients</p>
+                                            <p className={`text-[10px] font-bold mt-1 ${audienceType === 'all' ? 'text-slate-400' : 'text-slate-400'}`}>{loadingClients ? 'Loading...' : `${clients.length} Recipients`}</p>
                                         </button>
                                         <button 
                                              onClick={() => setAudienceType('industry')}
@@ -299,7 +301,7 @@ const BulkSMS: React.FC = () => {
                                              <button 
                                                 key={temp.id} 
                                                 onClick={() => applyTemplate(temp.text)}
-                                                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition whitespace-nowrap shadow-sm"
+                                                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition whitespace-nowrap"
                                             >
                                                  {temp.title}
                                              </button>
@@ -316,7 +318,7 @@ const BulkSMS: React.FC = () => {
                                             type="datetime-local" 
                                             value={scheduleDate}
                                             onChange={(e) => setScheduleDate(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-slate-200 outline-none text-sm shadow-sm"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-slate-200 outline-none text-sm"
                                          />
                                      </div>
                                 </div>
@@ -336,13 +338,13 @@ const BulkSMS: React.FC = () => {
                         </div>
 
                         {/* Right: Live Preview */}
-                        <div className="w-[40%] bg-slate-50 border-l border-slate-200 p-8 flex flex-col items-center justify-center relative">
+                        <div className="hidden md:flex w-[40%] bg-slate-50 border-l border-slate-200 p-8 flex-col items-center justify-center relative">
                             <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
                             
                             <h4 className="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6 relative z-10">Live Preview</h4>
                             
                             {/* Phone Mockup */}
-                            <div className="w-[280px] h-[500px] bg-white rounded-[40px] border-[8px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col">
+                            <div className="w-[280px] h-[500px] bg-white rounded-3xl border-[8px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col">
                                 <div className="h-6 bg-slate-800 w-32 absolute top-0 left-1/2 -translate-x-1/2 rounded-b-xl z-20"></div>
                                 <div className="h-12 bg-slate-100 border-b border-slate-200 flex items-center px-4 pt-2">
                                      <div className="w-6 h-6 bg-slate-300 rounded-full"></div>
@@ -365,13 +367,13 @@ const BulkSMS: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                <div className="h-12 bg-white border-t border-slate-100 flex items-center justify-center">
+                                <div className="h-12 border-t border-slate-100 flex items-center justify-center">
                                     <div className="w-32 h-1 bg-slate-200 rounded-full"></div>
                                 </div>
                             </div>
                             
                             <div className="mt-8 flex gap-2 relative z-10">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg">
                                     <Smartphone className="w-3 h-3 text-slate-400" />
                                     <span className="text-[10px] font-bold text-slate-600">iOS Preview</span>
                                 </div>

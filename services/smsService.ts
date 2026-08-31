@@ -1,8 +1,9 @@
 
 const API_URL = 'https://sms.mobiwave.co.ke/api/v3/sms/send';
-// Note: In production, this should be in an environment variable. 
-// Using a placeholder based on the prompt's context or a safe default.
-const API_TOKEN = process.env.SMS_API_TOKEN || '49|LNFe8WJ7CPtvl2mzowAB4ll4enbFR0XGgnQh2qWY'; 
+const API_TOKEN = process.env.SMS_API_TOKEN;
+if (!API_TOKEN) {
+  console.error('SMS_SERVICE: SMS_API_TOKEN is not set. SMS sending will fail.');
+}
 
 export interface SmsResponse {
     status: 'success' | 'error';
@@ -21,6 +22,9 @@ export const scheduleSmsReminder = async (
     message: string,
     scheduleTime?: string
 ): Promise<SmsResponse> => {
+    if (!API_TOKEN) {
+        return { status: 'error', message: 'SMS service not configured (SMS_API_TOKEN missing)' };
+    }
     try {
         const payload: any = {
             recipient: recipient,
