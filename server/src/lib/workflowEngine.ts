@@ -12,17 +12,36 @@ interface TriggerData {
   [key: string]: any;
 }
 
+function getField(data: TriggerData, field: string): unknown {
+  if (field in data) return data[field];
+  const [root, ...rest] = field.split('.');
+  let value: any = data[root];
+  for (const key of rest) value = value == null ? undefined : value[key];
+  return value;
+}
+
 function conditionsMatch(conditions: string | null, data: TriggerData) {
   if (!conditions) return true;
   try {
     const conds = JSON.parse(conditions);
-    if (conds.field && conds.equals !== undefined && data[conds.field] !== conds.equals) return false;
-    if (conds.field && conds.notEquals !== undefined && data[conds.field] === conds.notEquals) return false;
+    if (!conds || typeof conds !== 'object' || Array.isArray(conds)) return false;
+    if (!conds.field) return true;
+    const actual = getField(data, String(conds.field));
+    if (conds.equals !== undefined && actual !== conds.equals) return false;
+    if (conds.notEquals !== undefined && actual === conds.notEquals) return false;
+    if (conds.in !== undefined && (!Array.isArray(conds.in) || !conds.in.includes(actual))) return false;
     return true;
   } catch {
     return false;
   }
 }
+
+const SAFE_LEAD_FIELDS = new Set([
+  'stage', 'probability', 'notes', 'source', 'proposalStatus', 'qualificationScore',
+  'qualificationSummary', 'growthPotential', 'riskAssessment', 'painPoints',
+  'socialHighlights', 'suggestedSolution', 'engagementStrategy', 'nextSteps',
+  'lastContact', 'order',
+]);
 
 async function executeWorkflow(workflow: any, data: TriggerData) {
   if (!conditionsMatch(workflow.conditions, data)) return null;
@@ -32,7 +51,7 @@ async function executeWorkflow(workflow: any, data: TriggerData) {
     actions = JSON.parse(workflow.actions);
     if (!Array.isArray(actions)) throw new Error('Workflow actions must be an array');
   } catch (error) {
-    const execution = await prisma.workflowExecution.create({
+    return prisma.workflowExecution.create({
       data: {
         workflowId: workflow.id,
         triggerData: JSON.stringify(data),
@@ -40,26 +59,30 @@ async function executeWorkflow(workflow: any, data: TriggerData) {
         status: 'failed',
       },
     });
-    return execution;
   }
 
   const executionResults: any[] = [];
   for (const action of actions) {
     try {
+      if (!action || typeof action !== 'object' || typeof action.type !== 'string') {
+        throw new Error('Invalid workflow action');
+      }
       switch (action.type) {
         case 'send_telegram':
-          executionResults.push({ type: action.type, status: 'queued' });
+          executionResults.push({ type: action.type, status: 'queued', delivery: 'external-provider-required' });
           break;
         case 'send_googlechat':
-          executionResults.push({ type: action.type, status: 'queued' });
+          executionResults.push({ type: action.type, status: 'queued', delivery: 'external-provider-required' });
           break;
         case 'send_whatsapp':
-          executionResults.push({ type: action.type, status: 'queued' });
+          executionResults.push({ type: action.type, status: 'queued', delivery: 'external-provider-required' });
           break;
         case 'update_field':
-          if (!data.lead || !action.field || action.value === undefined) throw new Error('update_field requires a lead, field and value');
+          if (!data.lead || !SAFE_LEAD_FIELDS.has(action.field) || action.value === undefined) {
+            throw new Error('update_field requires a lead, an allowed field and a value');
+          }
           await prisma.lead.update({ where: { id: data.lead.id }, data: { [action.field]: action.value } });
-          executionResults.push({ type: action.type, status: 'success' });
+          executionResults.push({ type: action.type, field: action.field, status: 'success' });
           break;
         case 'create_task':
           if (!data.lead) throw new Error('create_task requires a lead');
@@ -69,8 +92,8 @@ async function executeWorkflow(workflow: any, data: TriggerData) {
               description: action.description || `Auto-created by workflow: ${workflow.name}`,
               assigneeId: data.lead.ownerId,
               dueDate: new Date(action.dueDate || Date.now() + 86400000 * 3),
-              priority: action.priority || 'Medium',
-            } as any,
+              priority: ['High', 'Medium', 'Low'].includes(action.priority) ? action.priority : 'Medium',
+            },
           });
           executionResults.push({ type: action.type, status: 'success' });
           break;
@@ -92,10 +115,10 @@ async function executeWorkflow(workflow: any, data: TriggerData) {
           executionResults.push({ type: action.type, status: 'success' });
           break;
         default:
-          executionResults.push({ type: action.type, status: 'unknown_action' });
+          throw new Error(`Unsupported workflow action: ${action.type}`);
       }
     } catch (actionError) {
-      executionResults.push({ type: action.type, status: 'failed', error: String(actionError) });
+      executionResults.push({ type: action?.type || 'invalid', status: 'failed', error: String(actionError) });
     }
   }
 
@@ -122,9 +145,7 @@ export async function runWorkflowById(workflowId: string, data: TriggerData) {
 export async function triggerWorkflows(triggerType: TriggerType, data: TriggerData) {
   try {
     const workflows = await prisma.workflow.findMany({ where: { enabled: true, trigger: triggerType } });
-    for (const workflow of workflows) {
-      await executeWorkflow(workflow, data);
-    }
+    for (const workflow of workflows) await executeWorkflow(workflow, data);
   } catch (error) {
     console.error('Workflow trigger error:', error);
   }
