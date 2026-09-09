@@ -41,7 +41,7 @@ router.get('/aging', async (_req: AuthRequest, res: Response) => {
 router.post('/transactions/:id/reconcile', authorize('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
     const transaction = await prisma.transaction.update({ where: { id: req.params.id as string }, data: { status: 'Verified' } });
-    await prisma.auditLog.create({ data: { actor: req.user?.email || 'system', action: 'transaction.reconciled', status: 'Success', details: JSON.stringify({ transactionId: transaction.id, amount: transaction.amount }), severity: 'Low', userId: req.user?.id } });
+    await prisma.auditLog.create({ data: { actor: req.user?.email || 'system', action: 'transaction.reconciled', status: 'Success', details: JSON.stringify({ transactionId: transaction.id, amount: transaction.amount }), severity: 'Low', userId: req.user?.userId } });
     res.json({ transaction });
   } catch (error) { console.error('Reconcile error:', error); res.status(500).json({ error: 'Unable to reconcile transaction' }); }
 });
