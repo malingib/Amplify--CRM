@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { config } from './config';
 import prisma from './lib/prisma';
@@ -24,19 +25,37 @@ import teamRoutes from './routes/team';
 const app = express();
 const httpServer = createServer(app);
 
-// Initialize WebSocket
 initWebSocket(httpServer);
 
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 240,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down and try again.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+});
+
 // Middleware
+app.disable('x-powered-by');
 app.use(cors({
   origin: config.corsOrigins,
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.1.0' });
 });
 
 // API Routes
@@ -55,18 +74,16 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/team', teamRoutes);
 
-// 404 handler
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const id = `ERR-${Date.now().toString(36)}`;
+  console.error(`[${id}] ${req.method} ${req.path}`, err);
+  res.status(500).json({ error: 'Internal server error', errorId: id });
 });
 
-// Start server
 async function main() {
   try {
     await prisma.$connect();
@@ -83,26 +100,14 @@ async function main() {
   }
 }
 
-if (process.env.NODE_ENV !== 'test') {
-  main();
-}
+if (process.env.NODE_ENV !== 'test') main();
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
+const shutdown = async () => {
   await prisma.$disconnect();
   process.exit(0);
-});
+};
 
-process.on('SIGINT', async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-// Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const id = `ERR-${Date.now().toString(36)}`;
-  console.error(`[${id}] Unhandled error:`, err);
-  res.status(500).json({ error: 'Internal server error', errorId: id });
-});
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 export default app;
