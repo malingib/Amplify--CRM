@@ -27,9 +27,13 @@ router.get('/aging', async (_req: AuthRequest, res: Response) => {
     const now = Date.now();
     const buckets = { current: 0, days1to30: 0, days31to60: 0, days61to90: 0, over90: 0 };
     for (const invoice of invoices) {
-      const days = Math.max(0, Math.floor((now - new Date(invoice.dueDate).getTime()) / 86400000));
-      if (days === 0) buckets.current += invoice.amount;
-      else if (days <= 30) buckets.days1to30 += invoice.amount;
+      const due = new Date(invoice.dueDate).getTime();
+      if (due >= now) {
+        buckets.current += invoice.amount;
+        continue;
+      }
+      const days = Math.floor((now - due) / 86400000);
+      if (days <= 30) buckets.days1to30 += invoice.amount;
       else if (days <= 60) buckets.days31to60 += invoice.amount;
       else if (days <= 90) buckets.days61to90 += invoice.amount;
       else buckets.over90 += invoice.amount;
@@ -40,9 +44,14 @@ router.get('/aging', async (_req: AuthRequest, res: Response) => {
 
 router.post('/transactions/:id/reconcile', authorize('ADMIN', 'MANAGER'), async (req: AuthRequest, res: Response) => {
   try {
-    const transaction = await prisma.transaction.update({ where: { id: req.params.id as string }, data: { status: 'Verified' } });
-    await prisma.auditLog.create({ data: { actor: req.user?.email || 'system', action: 'transaction.reconciled', status: 'Success', details: JSON.stringify({ transactionId: transaction.id, amount: transaction.amount }), severity: 'Low', userId: req.user?.userId } });
-    res.json({ transaction });
+    const id = String(req.params.id);
+    const transaction = await prisma.transaction.findUnique({ where: { id } });
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+    if (transaction.status === 'Verified') return res.json({ transaction, alreadyReconciled: true });
+
+    const updated = await prisma.transaction.update({ where: { id }, data: { status: 'Verified' } });
+    await prisma.auditLog.create({ data: { actor: req.user?.email || 'system', action: 'transaction.reconciled', status: 'Success', details: JSON.stringify({ transactionId: updated.id, amount: updated.amount }), severity: 'Low', userId: req.user?.userId } });
+    res.json({ transaction: updated, alreadyReconciled: false });
   } catch (error) { console.error('Reconcile error:', error); res.status(500).json({ error: 'Unable to reconcile transaction' }); }
 });
 
