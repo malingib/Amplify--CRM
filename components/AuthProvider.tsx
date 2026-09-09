@@ -23,46 +23,66 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Admin',
+  MANAGER: 'Manager',
+  SALES: 'Sales',
+  VIEWER: 'Viewer',
+  SYSTEM_OWNER: 'SystemOwner',
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(localStorage.getItem('amplify_token'));
+  const [token, setTokenState] = useState<string | null>(() => localStorage.getItem('amplify_token'));
   const [isLoading, setIsLoading] = useState(true);
 
-  const normalizeRole = (role: string): string => {
-    const map: Record<string, string> = {
-      'ADMIN': 'Admin',
-      'MANAGER': 'Manager',
-      'SALES': 'Sales',
-      'VIEWER': 'Viewer',
-      'SYSTEM_OWNER': 'SystemOwner',
-    };
-    return map[role] || role;
-  };
-
   const normalizeUser = (u: any): User => ({
-    ...u,
-    role: normalizeRole(u.role),
+    id: String(u.id),
+    email: u.email,
+    name: u.name,
+    role: ROLE_LABELS[u.role] || u.role,
+    avatar: u.avatar,
   });
+
+  const clearSession = useCallback(() => {
+    clearToken();
+    setTokenState(null);
+    setUser(null);
+  }, []);
 
   const refreshUser = useCallback(async () => {
     try {
       const data = await authApi.me();
+      if (!data?.user) throw new Error('Invalid session response');
       setUser(normalizeUser(data.user));
     } catch {
-      setUser(null);
-      clearToken();
-      setTokenState(null);
+      clearSession();
     }
-  }, []);
+  }, [clearSession]);
 
   useEffect(() => {
-    if (token) {
-      setToken(token);
-      refreshUser().finally(() => setIsLoading(false));
-    } else {
+    if (!token) {
       setIsLoading(false);
+      return;
     }
+
+    setToken(token);
+    refreshUser().finally(() => setIsLoading(false));
   }, [token, refreshUser]);
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'amplify_token' && e.newValue === null) clearSession();
+    };
+    const handleExpired = () => clearSession();
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('amplify:auth-expired', handleExpired);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('amplify:auth-expired', handleExpired);
+    };
+  }, [clearSession]);
 
   const login = async (email: string, password: string) => {
     const data = await authApi.login(email, password);
@@ -75,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await authApi.register(regData);
     setToken(data.token);
     setTokenState(data.token);
-    setUser(data.user);
+    setUser(normalizeUser(data.user));
   };
 
   const googleLogin = async (credential: string) => {
@@ -85,28 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(normalizeUser(data.user));
   };
 
-  const logout = () => {
-    clearToken();
-    setTokenState(null);
-    setUser(null);
-  };
-
-  // Cross-tab logout: if another tab clears the token, log out here too
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'amplify_token' && e.newValue === null) {
-        logout();
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  const logout = () => clearSession();
 
   return (
     <AuthContext.Provider value={{
       user,
       token,
-      isAuthenticated: !!user,
+      isAuthenticated: !!user && !!token,
       isLoading,
       login,
       register,
