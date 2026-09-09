@@ -10,6 +10,7 @@ import { initWebSocket } from './websocket';
 import authRoutes from './routes/auth';
 import leadRoutes from './routes/leads';
 import leadLifecycleRoutes from './routes/leadLifecycle';
+import crmCoreRoutes from './routes/crmCore';
 import clientRoutes from './routes/clients';
 import catalogueRoutes from './routes/catalogue';
 import taskRoutes from './routes/tasks';
@@ -25,24 +26,10 @@ import teamRoutes from './routes/team';
 
 const app = express();
 const httpServer = createServer(app);
-
 initWebSocket(httpServer);
 
-const apiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 240,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests. Please slow down and try again.' },
-});
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many authentication attempts. Please try again later.' },
-});
+const apiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many requests. Please slow down and try again.' } });
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many authentication attempts. Please try again later.' } });
 
 app.disable('x-powered-by');
 app.use(cors({ origin: config.corsOrigins, credentials: true }));
@@ -50,13 +37,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter);
 
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.1.0' });
-});
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.2.0' }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/lead-lifecycle', leadLifecycleRoutes);
+app.use('/api/crm', crmCoreRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/catalogue', catalogueRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -71,7 +57,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/team', teamRoutes);
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
-
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const id = `ERR-${Date.now().toString(36)}`;
   console.error(`[${id}] ${req.method} ${req.path}`, err);
@@ -94,13 +79,7 @@ async function main() {
 }
 
 if (process.env.NODE_ENV !== 'test') main();
-
-const shutdown = async () => {
-  await prisma.$disconnect();
-  process.exit(0);
-};
-
+const shutdown = async () => { await prisma.$disconnect(); process.exit(0); };
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
 export default app;
