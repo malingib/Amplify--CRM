@@ -9,7 +9,7 @@ router.get('/insights', async (_req: AuthRequest, res: Response) => {
   try {
     const [leads, overdue, staleTasks] = await Promise.all([
       prisma.lead.findMany({ select: { id: true, name: true, company: true, value: true, stage: true, probability: true, lastContact: true }, orderBy: { value: 'desc' } }),
-      prisma.invoice.findMany({ where: { status: { not: 'Paid' }, dueDate: { lt: new Date() } }, include: { client: { select: { name: true, company: true } } }, orderBy: { amount: 'desc' }, take: 10 }),
+      prisma.invoice.findMany({ where: { status: { not: 'Paid' }, dueDate: { lt: new Date() } }, include: { client: { select: { id: true, name: true, company: true } } }, orderBy: { amount: 'desc' }, take: 10 }),
       prisma.task.findMany({ where: { status: { not: 'Done' }, dueDate: { lt: new Date() } }, orderBy: { dueDate: 'asc' }, take: 10 }),
     ]);
     const open = leads.filter(l => !['CLOSED', 'LOST'].includes(l.stage));
