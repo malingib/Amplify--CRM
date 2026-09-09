@@ -9,13 +9,24 @@ function parseCorsOrigins(raw: string | undefined): string[] {
   }
 }
 
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (secret) return secret;
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production');
+  }
+
+  return 'dev-only-secret-change-this';
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '3001'),
   nodeEnv: process.env.NODE_ENV || 'development',
   appUrl: process.env.APP_URL || 'http://localhost:5173',
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-this',
+    secret: getJwtSecret(),
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   google: {
