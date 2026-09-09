@@ -15,21 +15,24 @@ export const loginSchema = z.object({
 export const leadSchema = z.object({
   name: z.string().min(1),
   company: z.string().min(1),
-  value: z.number().optional(),
+  value: z.number().nonnegative().optional(),
   stage: z.enum(['INTAKE', 'QUALIFIED', 'PROPOSAL', 'NEGOTIATION', 'CLOSED', 'LOST']).optional(),
-  probability: z.number().min(0).max(100).optional(),
+  probability: z.number().int().min(0).max(100).optional(),
+  qualificationScore: z.number().int().min(0).max(100).optional().nullable(),
+  qualificationSummary: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   source: z.string().optional(),
   avatar: z.string().optional().nullable(),
+  proposalStatus: z.string().optional().nullable(),
   linkedin: z.string().optional().nullable(),
   twitter: z.string().optional().nullable(),
   website: z.string().optional().nullable(),
   facebook: z.string().optional().nullable(),
   instagram: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
-  order: z.number().optional(),
+  order: z.number().int().optional(),
 });
 
 export const clientSchema = z.object({
@@ -38,7 +41,7 @@ export const clientSchema = z.object({
   email: z.string().email(),
   phone: z.string(),
   status: z.enum(['Active', 'Inactive', 'Pending']).optional(),
-  totalRevenue: z.number().optional(),
+  totalRevenue: z.number().nonnegative().optional(),
   avatar: z.string().optional().nullable(),
   industry: z.string().optional(),
 });
