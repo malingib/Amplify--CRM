@@ -8,49 +8,58 @@ const router = Router();
 router.post('/:id/convert', authenticate, authorize('ADMIN', 'MANAGER', 'SALES'), async (req: AuthRequest, res: Response) => {
   try {
     const leadId = req.params.id as string;
-    const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+    const result = await prisma.$transaction(async (tx) => {
+      const lead = await tx.lead.findUnique({ where: { id: leadId } });
 
-    if (!lead) {
+      if (!lead) return null;
+
+      const existing = await tx.client.findFirst({
+        where: {
+          OR: [
+            ...(lead.email ? [{ email: lead.email }] : []),
+            { company: lead.company, name: lead.name },
+          ],
+        },
+      });
+
+      const client = existing ?? await tx.client.create({
+        data: {
+          name: lead.name,
+          company: lead.company,
+          email: lead.email || `${lead.id}@placeholder.local`,
+          phone: lead.phone || '',
+          status: 'Active',
+          totalRevenue: lead.value || 0,
+          avatar: lead.avatar,
+          industry: 'General',
+        },
+      });
+
+      await tx.lead.update({
+        where: { id: lead.id },
+        data: { stage: 'CLOSED', probability: 100 },
+      });
+
+      await tx.activityLog.create({
+        data: {
+          type: 'System',
+          content: existing
+            ? `Lead converted to existing client: ${client.name} (${client.company})`
+            : `Lead converted to client: ${client.name} (${client.company})`,
+          performedBy: req.user!.email,
+          leadId: lead.id,
+        },
+      });
+
+      return { client, created: !existing, leadId: lead.id };
+    });
+
+    if (!result) {
       res.status(404).json({ error: 'Lead not found' });
       return;
     }
 
-    const existing = await prisma.client.findFirst({
-      where: {
-        OR: [
-          ...(lead.email ? [{ email: lead.email }] : []),
-          { company: lead.company, name: lead.name },
-        ],
-      },
-    });
-
-    if (existing) {
-      if (lead.stage !== 'CLOSED') {
-        await prisma.lead.update({ where: { id: lead.id }, data: { stage: 'CLOSED', probability: 100 } });
-      }
-      res.json({ client: existing, created: false, leadId: lead.id });
-      return;
-    }
-
-    const client = await prisma.client.create({
-      data: {
-        name: lead.name,
-        company: lead.company,
-        email: lead.email || `${lead.id}@placeholder.local`,
-        phone: lead.phone || '',
-        status: 'Active',
-        totalRevenue: lead.value || 0,
-        avatar: lead.avatar,
-        industry: 'General',
-      },
-    });
-
-    await prisma.lead.update({
-      where: { id: lead.id },
-      data: { stage: 'CLOSED', probability: 100 },
-    });
-
-    res.status(201).json({ client, created: true, leadId: lead.id });
+    res.status(result.created ? 201 : 200).json(result);
   } catch (error) {
     console.error('Lead conversion error:', error);
     res.status(500).json({ error: 'Internal server error' });
