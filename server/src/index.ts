@@ -9,6 +9,7 @@ import { initWebSocket } from './websocket';
 // Routes
 import authRoutes from './routes/auth';
 import leadRoutes from './routes/leads';
+import leadLifecycleRoutes from './routes/leadLifecycle';
 import clientRoutes from './routes/clients';
 import catalogueRoutes from './routes/catalogue';
 import taskRoutes from './routes/tasks';
@@ -43,24 +44,19 @@ const authLimiter = rateLimit({
   message: { error: 'Too many authentication attempts. Please try again later.' },
 });
 
-// Middleware
 app.disable('x-powered-by');
-app.use(cors({
-  origin: config.corsOrigins,
-  credentials: true,
-}));
+app.use(cors({ origin: config.corsOrigins, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter);
 
-// Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.1.0' });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/lead-lifecycle', leadLifecycleRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/catalogue', catalogueRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -74,9 +70,7 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/team', teamRoutes);
 
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Not found' });
-});
+app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const id = `ERR-${Date.now().toString(36)}`;
@@ -88,7 +82,6 @@ async function main() {
   try {
     await prisma.$connect();
     console.log('Database connected');
-
     httpServer.listen(config.port, () => {
       console.log(`Amplify CRM API running on http://localhost:${config.port}`);
       console.log(`WebSocket ready on ws://localhost:${config.port}`);
