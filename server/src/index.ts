@@ -21,6 +21,7 @@ import whatsappRoutes from './routes/whatsapp';
 import telegramRoutes from './routes/telegram';
 import googleChatRoutes from './routes/googlechat';
 import workspaceRoutes from './routes/workspace';
+import platformRoutes from './routes/platform';
 import auditRoutes from './routes/audit';
 import dashboardRoutes from './routes/dashboard';
 import teamRoutes from './routes/team';
@@ -45,8 +46,8 @@ app.use((_req, res, next) => {
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter);
 app.get('/api/health', async (_req, res) => {
-  try { await prisma.$queryRaw`SELECT 1`; res.json({ status: 'ok', database: 'ok', timestamp: new Date().toISOString(), version: '1.3.0' }); }
-  catch { res.status(503).json({ status: 'degraded', database: 'unavailable', timestamp: new Date().toISOString(), version: '1.3.0' }); }
+  try { await prisma.$queryRaw`SELECT 1`; res.json({ status: 'ok', database: 'ok', timestamp: new Date().toISOString(), version: '1.4.0' }); }
+  catch { res.status(503).json({ status: 'degraded', database: 'unavailable', timestamp: new Date().toISOString(), version: '1.4.0' }); }
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
@@ -64,6 +65,7 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/telegram', telegramRoutes);
 app.use('/api/googlechat', googleChatRoutes);
 app.use('/api/workspace', workspaceRoutes);
+app.use('/api/platform', platformRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/team', teamRoutes);
