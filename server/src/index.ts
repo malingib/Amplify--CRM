@@ -29,7 +29,7 @@ import teamRoutes from './routes/team';
 
 const app = express();
 const httpServer = createServer(app);
-initWebSocket(httpServer);
+if (!process.env.VERCEL) initWebSocket(httpServer);
 const apiLimiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many requests. Please slow down and try again.' } });
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many authentication attempts. Please try again later.' } });
 
@@ -81,7 +81,7 @@ async function main() {
   try { await prisma.$connect(); console.log('Database connected'); httpServer.listen(config.port, () => console.log(`Amplify CRM API running on http://localhost:${config.port}`)); }
   catch (error) { console.error('Failed to start server:', error); process.exit(1); }
 }
-if (process.env.NODE_ENV !== 'test') main();
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) main();
 const shutdown = async () => { await prisma.$disconnect(); process.exit(0); };
 process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
 export default app;
