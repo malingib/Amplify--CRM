@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "postinstall": "prisma generate"
   },
+  "prisma": {
+    "schema": "server/prisma/schema.prisma"
+  },
   "dependencies": {
     "@google/genai": "^1.30.0",
     "@prisma/client": "^6.9.0",
