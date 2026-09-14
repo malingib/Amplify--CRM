@@ -3,7 +3,7 @@ dotenv.config();
 
 function parseCorsOrigins(raw: string | undefined): string[] {
   try {
-    return raw ? JSON.parse(raw) : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'];
+    return raw ? JSON.parse(raw) : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173', ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : [])];
   } catch {
     return raw!.split(',').map(s => s.trim());
   }
@@ -23,7 +23,7 @@ function getJwtSecret(): string {
 export const config = {
   port: parseInt(process.env.PORT || '3001'),
   nodeEnv: process.env.NODE_ENV || 'development',
-  appUrl: process.env.APP_URL || 'http://localhost:5173',
+  appUrl: process.env.APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'),
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   jwt: {
     secret: getJwtSecret(),
