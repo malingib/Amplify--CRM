@@ -17,10 +17,6 @@ jobs:
   frontend:
     name: Frontend build
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgresql://amplify:amplify_test_password@localhost:5432/amplify_test?schema=public
-      JWT_SECRET: ci-only-test-secret-change-before-production
-      NODE_ENV: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,6 +50,10 @@ jobs:
     defaults:
       run:
         working-directory: server
+    env:
+      DATABASE_URL: postgresql://amplify:amplify_test_password@localhost:5432/amplify_test
+      JWT_SECRET: ci-only-test-secret-change-before-production
+      NODE_ENV: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
