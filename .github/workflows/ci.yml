@@ -31,11 +31,29 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend build
+    name: Backend build and PostgreSQL integration tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: amplify
+          POSTGRES_PASSWORD: amplify_test_password
+          POSTGRES_DB: amplify_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U amplify -d amplify_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: server
+    env:
+      DATABASE_URL: postgresql://amplify:amplify_test_password@localhost:5432/amplify_test
+      JWT_SECRET: ci-only-test-secret-change-before-production
+      NODE_ENV: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,3 +69,11 @@ jobs:
         run: npx prisma generate
       - name: Build backend
         run: npm run build
+      - name: Create Prisma schema in isolated PostgreSQL
+        run: npx prisma db push
+      - name: Apply workspace platform migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/migrations/20260909140000_twenty_gap_closure/migration.sql
+      - name: Seed isolated test database
+        run: npm run db:seed
+      - name: Run backend tests
+        run: npm test

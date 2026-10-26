@@ -1,70 +1,52 @@
-# Deploying Google Workspace Integration
+# Deployment and release gate
 
-## Prerequisites
+This project is configured for Vercel with an Express API entry point at `api/index.ts` and a Prisma schema at `server/prisma/schema.prisma`. Deploy against PostgreSQL/Neon. This is a **single-tenant application for one organization**; do not introduce multi-customer tenant isolation as a release prerequisite.
 
-1. **Google Cloud Project** with the following APIs enabled:
-   - Google OAuth (SSO)
-   - Google Drive API
-   - Gmail API
-   - Google Calendar API
-   - People API (Contacts)
-   - Google Chat API (bot)
+## Required environment
 
-2. **Service Account** with domain-wide delegation:
-   - Create in IAM → Service Accounts
-   - Enable domain-wide delegation
-   - Delegate scopes needed:
-     - `https://www.googleapis.com/auth/drive.file`
-     - `https://www.googleapis.com/auth/gmail.send`
-     - `https://www.googleapis.com/auth/calendar.events`
-     - `https://www.googleapis.com/auth/contacts`
+Set these in the deployment environment (not in Git):
 
-## Steps
+- `DATABASE_URL` — PostgreSQL/Neon connection string
+- `JWT_SECRET` — high-entropy production secret; required when `NODE_ENV=production`
+- `CORS_ORIGINS` — JSON array or comma-separated list of exact trusted origins
+- `APP_URL` — canonical public app URL
 
-### 1. OAuth Consent + Client ID
-- Configure OAuth consent screen (External or Internal)
-- Create OAuth 2.0 Web Client ID
-- Add `http://localhost:5173` and `https://yourdomain.com` to Authorized JS Origins
-- Set `VITE_GOOGLE_CLIENT_ID` in `.env` (root)
+Optional integration variables:
 
-### 2. Service Account Key
-- In Service Account → Keys → Add Key → JSON
-- Minify the JSON (one line) and set as `GOOGLE_SERVICE_ACCOUNT_KEY` in `server/.env`
-- Set `GMAIL_SENDER` to the service account's delegated sender email
+- Google sign-in: `GOOGLE_CLIENT_ID`, `GOOGLE_ALLOWED_DOMAIN`
+- Google Workspace APIs: `GOOGLE_SERVICE_ACCOUNT_KEY`, `GMAIL_SENDER`, `GOOGLE_CALENDAR_ID`, `GOOGLE_CHAT_VERIFICATION_TOKEN`
+- AI: `GEMINI_API_KEY`
+- Telegram: `TELEGRAM_BOT_TOKEN`
+- WhatsApp provider: `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`
+- Payment integration: `PAYSTACK_SECRET_KEY`, `PAYSTACK_PUBLIC_KEY`
+- MobiWave messaging: `MOBIWAVE_API_KEY`, `MOBIWAVE_SENDER_ID`
 
-### 3. Google Chat Bot (optional)
-- In Cloud Console → Chat API → Manage → Create Bot
-- Set bot URL to `https://yourdomain.com/api/googlechat/webhook`
-- Set `GOOGLE_CHAT_VERIFICATION_TOKEN` to the bot's verification token
-- Set `GOOGLE_ALLOWED_DOMAIN` to restrict Google SSO (e.g., `yourcompany.com`)
+Only enable integrations whose credentials and callback URLs have been configured and tested.
 
-### 4. Environment Variables
-
-**Root `.env`:**
-- `VITE_GOOGLE_CLIENT_ID`
-
-**`server/.env`:**
-- `GOOGLE_CLIENT_ID` — same as above
-- `GOOGLE_ALLOWED_DOMAIN` — restrict SSO to this domain
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — minified service account JSON
-- `GMAIL_SENDER` — email to send from (must be a Google Workspace user)
-- `GOOGLE_CALENDAR_ID` — default `primary`
-- `GOOGLE_CHAT_VERIFICATION_TOKEN` — Chat bot verification token
-- `CORS_ORIGINS` — JSON array or CSV of allowed origins
-- `APP_URL` — public URL (used in email links)
-
-### 5. Verify
+## Build and test checks
 
 ```bash
-# Server
-cd server && npm run build && npm start
-
-# Health check
-curl https://yourdomain.com/api/health
-
-# Test Drive
-curl -X POST https://yourdomain.com/api/workspace/drive/create \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Test Doc","content":"Hello World"}'
+npm ci
+npx prisma generate --schema=server/prisma/schema.prisma
+npm run build
+cd server
+npm ci
+npx prisma generate
+npm run build
+npm test
 ```
+
+CI runs the backend tests against a disposable PostgreSQL service and applies the platform migration there. Never use the CI database settings in production.
+
+## Database release safety
+
+The platform migration is PostgreSQL-specific. Before applying schema changes to the production database, take a backup and verify the migration against a disposable copy. Confirm the production environment points to the intended PostgreSQL database and keep a recovery plan.
+
+## Post-deployment smoke checks
+
+- `GET /api/health` reports healthy database status.
+- Unauthenticated API requests return `401` where authentication is required.
+- Registration cannot grant an administrator role by supplying a request field.
+- Verify core CRM create, read, update and delete flows.
+- Verify lead conversion, activity timeline, communication logging, invoice/payment lifecycle, and workflow execution.
+- Confirm Vercel deployment status and deployed commit SHA; a successful GitHub build alone does not prove production is live.
