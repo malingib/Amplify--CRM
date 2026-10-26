@@ -43,7 +43,8 @@ router.post('/register', authLimiter, async (req: AuthRequest, res: Response) =>
         email: body.email,
         passwordHash,
         name: body.name,
-        role: body.role || 'VIEWER',
+        // Public self-registration must never grant elevated privileges.
+        role: 'VIEWER',
       },
       select: { id: true, email: true, name: true, role: true, createdAt: true },
     });
