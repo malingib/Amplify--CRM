@@ -1,70 +1,58 @@
-# Deploying Google Workspace Integration
+# Deployment and release gate
 
-## Prerequisites
+This project is configured for Vercel with an Express API entry point at `api/index.ts` and a Prisma schema at `server/prisma/schema.prisma`. The schema declares PostgreSQL, so deploy against PostgreSQL/Neon.
 
-1. **Google Cloud Project** with the following APIs enabled:
-   - Google OAuth (SSO)
-   - Google Drive API
-   - Gmail API
-   - Google Calendar API
-   - People API (Contacts)
-   - Google Chat API (bot)
+## Required environment
 
-2. **Service Account** with domain-wide delegation:
-   - Create in IAM → Service Accounts
-   - Enable domain-wide delegation
-   - Delegate scopes needed:
-     - `https://www.googleapis.com/auth/drive.file`
-     - `https://www.googleapis.com/auth/gmail.send`
-     - `https://www.googleapis.com/auth/calendar.events`
-     - `https://www.googleapis.com/auth/contacts`
+Set these in the deployment environment (not in Git):
 
-## Steps
+- `DATABASE_URL` — PostgreSQL/Neon connection string
+- `JWT_SECRET` — high-entropy production secret; required when `NODE_ENV=production`
+- `CORS_ORIGINS` — JSON array or comma-separated list of exact trusted origins
+- `APP_URL` — canonical public app URL
 
-### 1. OAuth Consent + Client ID
-- Configure OAuth consent screen (External or Internal)
-- Create OAuth 2.0 Web Client ID
-- Add `http://localhost:5173` and `https://yourdomain.com` to Authorized JS Origins
-- Set `VITE_GOOGLE_CLIENT_ID` in `.env` (root)
+Optional integration variables:
 
-### 2. Service Account Key
-- In Service Account → Keys → Add Key → JSON
-- Minify the JSON (one line) and set as `GOOGLE_SERVICE_ACCOUNT_KEY` in `server/.env`
-- Set `GMAIL_SENDER` to the service account's delegated sender email
+- Google sign-in: `GOOGLE_CLIENT_ID`, `GOOGLE_ALLOWED_DOMAIN`
+- Google Workspace APIs: `GOOGLE_SERVICE_ACCOUNT_KEY`, `GMAIL_SENDER`, `GOOGLE_CALENDAR_ID`, `GOOGLE_CHAT_VERIFICATION_TOKEN`
+- AI: `GEMINI_API_KEY`
+- Telegram: `TELEGRAM_BOT_TOKEN`
+- WhatsApp provider: `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`
+- Payment integration: `PAYSTACK_SECRET_KEY`, `PAYSTACK_PUBLIC_KEY`
+- MobiWave messaging: `MOBIWAVE_API_KEY`, `MOBIWAVE_SENDER_ID`
 
-### 3. Google Chat Bot (optional)
-- In Cloud Console → Chat API → Manage → Create Bot
-- Set bot URL to `https://yourdomain.com/api/googlechat/webhook`
-- Set `GOOGLE_CHAT_VERIFICATION_TOKEN` to the bot's verification token
-- Set `GOOGLE_ALLOWED_DOMAIN` to restrict Google SSO (e.g., `yourcompany.com`)
+Only enable integrations whose credentials and callback URLs have been configured and tested.
 
-### 4. Environment Variables
-
-**Root `.env`:**
-- `VITE_GOOGLE_CLIENT_ID`
-
-**`server/.env`:**
-- `GOOGLE_CLIENT_ID` — same as above
-- `GOOGLE_ALLOWED_DOMAIN` — restrict SSO to this domain
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — minified service account JSON
-- `GMAIL_SENDER` — email to send from (must be a Google Workspace user)
-- `GOOGLE_CALENDAR_ID` — default `primary`
-- `GOOGLE_CHAT_VERIFICATION_TOKEN` — Chat bot verification token
-- `CORS_ORIGINS` — JSON array or CSV of allowed origins
-- `APP_URL` — public URL (used in email links)
-
-### 5. Verify
+## Build checks
 
 ```bash
-# Server
-cd server && npm run build && npm start
-
-# Health check
-curl https://yourdomain.com/api/health
-
-# Test Drive
-curl -X POST https://yourdomain.com/api/workspace/drive/create \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Test Doc","content":"Hello World"}'
+npm ci
+npx prisma generate --schema=server/prisma/schema.prisma
+npm run build
+cd server
+npm ci
+npx prisma generate
+npm run build
+npm test
 ```
+
+The backend test suite currently expects a configured test database and seeded fixtures; CI must provide an isolated database before those tests can be relied on as a release gate.
+
+## Production blockers to clear before release
+
+1. **PostgreSQL migration compatibility:** the current workspace migration contains SQLite-specific SQL (`PRAGMA`, `INSERT OR IGNORE`, and SQLite-style schema types), while Prisma declares PostgreSQL. Convert and validate the migration against a disposable PostgreSQL database before running production migrations.
+2. **Workspace SQL compatibility:** platform routes use `?` positional placeholders and SQLite-specific `INSERT OR IGNORE`; rewrite these queries for PostgreSQL and test all workspace operations.
+3. **Tenant isolation:** legacy leads, clients, invoices, transactions, tasks, workflows, and communications must be scoped to the authenticated workspace. Test cross-workspace reads and writes, not only the newer workspace tables.
+4. **Registration and RBAC:** public registration must always create a least-privileged account; workspace membership roles must be enforced per workspace rather than inferred from a global user role.
+5. **Automated verification:** add an isolated PostgreSQL test job, regression tests for role escalation and cross-tenant access, and verify production health after deployment.
+
+Do not apply a schema migration to production until it has been tested against a backup or disposable database and a rollback/recovery plan exists.
+
+## Post-deployment smoke checks
+
+- `GET /api/health` returns healthy database status.
+- Unauthenticated API requests return `401` where authentication is required.
+- A member of workspace A cannot read or mutate workspace B records by changing IDs or workspace headers.
+- Registration cannot create an admin; only authorized admin workflows can grant roles.
+- Lead conversion, activity timeline, communication logging, invoice/payment lifecycle, and workflow execution are tested end to end.
+- Confirm Vercel deployment status and the deployed commit SHA; a successful GitHub build alone does not prove a deployment is live.
