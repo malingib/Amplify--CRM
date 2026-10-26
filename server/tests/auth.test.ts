@@ -57,3 +57,19 @@ describe('Auth', () => {
     expect(res.status).toBe(401);
   });
 });
+
+
+describe('Registration privilege boundaries', () => {
+  it('does not allow public registration to grant an administrator role', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: `role-escalation-${Date.now()}@example.com`,
+        password: 'secure-password-123',
+        name: 'Role Escalation Test',
+        role: 'ADMIN',
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe('VIEWER');
+  });
+});
