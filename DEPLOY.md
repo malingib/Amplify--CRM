@@ -1,6 +1,6 @@
 # Deployment and release gate
 
-This project is configured for Vercel with an Express API entry point at `api/index.ts` and a Prisma schema at `server/prisma/schema.prisma`. The schema declares PostgreSQL, so deploy against PostgreSQL/Neon.
+This project is configured for Vercel with an Express API entry point at `api/index.ts` and a Prisma schema at `server/prisma/schema.prisma`. Deploy against PostgreSQL/Neon. This is a **single-tenant application for one organization**; do not introduce multi-customer tenant isolation as a release prerequisite.
 
 ## Required environment
 
@@ -23,7 +23,7 @@ Optional integration variables:
 
 Only enable integrations whose credentials and callback URLs have been configured and tested.
 
-## Build checks
+## Build and test checks
 
 ```bash
 npm ci
@@ -36,23 +36,17 @@ npm run build
 npm test
 ```
 
-The backend test suite currently expects a configured test database and seeded fixtures; CI must provide an isolated database before those tests can be relied on as a release gate.
+CI runs the backend tests against a disposable PostgreSQL service and applies the platform migration there. Never use the CI database settings in production.
 
-## Production blockers to clear before release
+## Database release safety
 
-1. **PostgreSQL migration compatibility:** the current workspace migration contains SQLite-specific SQL (`PRAGMA`, `INSERT OR IGNORE`, and SQLite-style schema types), while Prisma declares PostgreSQL. Convert and validate the migration against a disposable PostgreSQL database before running production migrations.
-2. **Workspace SQL compatibility:** platform routes use `?` positional placeholders and SQLite-specific `INSERT OR IGNORE`; rewrite these queries for PostgreSQL and test all workspace operations.
-3. **Tenant isolation:** legacy leads, clients, invoices, transactions, tasks, workflows, and communications must be scoped to the authenticated workspace. Test cross-workspace reads and writes, not only the newer workspace tables.
-4. **Registration and RBAC:** public registration must always create a least-privileged account; workspace membership roles must be enforced per workspace rather than inferred from a global user role.
-5. **Automated verification:** add an isolated PostgreSQL test job, regression tests for role escalation and cross-tenant access, and verify production health after deployment.
-
-Do not apply a schema migration to production until it has been tested against a backup or disposable database and a rollback/recovery plan exists.
+The platform migration is PostgreSQL-specific. Before applying schema changes to the production database, take a backup and verify the migration against a disposable copy. Confirm the production environment points to the intended PostgreSQL database and keep a recovery plan.
 
 ## Post-deployment smoke checks
 
-- `GET /api/health` returns healthy database status.
+- `GET /api/health` reports healthy database status.
 - Unauthenticated API requests return `401` where authentication is required.
-- A member of workspace A cannot read or mutate workspace B records by changing IDs or workspace headers.
-- Registration cannot create an admin; only authorized admin workflows can grant roles.
-- Lead conversion, activity timeline, communication logging, invoice/payment lifecycle, and workflow execution are tested end to end.
-- Confirm Vercel deployment status and the deployed commit SHA; a successful GitHub build alone does not prove a deployment is live.
+- Registration cannot grant an administrator role by supplying a request field.
+- Verify core CRM create, read, update and delete flows.
+- Verify lead conversion, activity timeline, communication logging, invoice/payment lifecycle, and workflow execution.
+- Confirm Vercel deployment status and deployed commit SHA; a successful GitHub build alone does not prove production is live.
