@@ -6,9 +6,11 @@ Amplify CRM is a React 19 + Vite + TypeScript CRM with an Express API, Prisma da
 
 - **Frontend:** React, Vite, Tailwind CSS, Recharts
 - **API:** Express under `server/src`, exposed by `api/index.ts` for Vercel
-- **Data access:** Prisma Client; the Prisma schema declares PostgreSQL
-- **Authentication:** password hashing with bcrypt, JWT bearer tokens, optional Google sign-in
-- **CRM areas:** leads and pipeline, contacts/clients, activities, opportunities, tasks, invoices, transactions, workflows, communications, and workspace-scoped discovery features
+- **Data access:** Prisma Client with PostgreSQL
+- **Authentication:** bcrypt password hashing, JWT bearer tokens, optional Google sign-in
+- **CRM areas:** leads and pipeline, contacts/clients, activities, opportunities, tasks, invoices, transactions, workflows, communications, and workspace discovery features
+
+This deployment is **single-tenant** and is intended for one organization. Workspace-related tables support the application's internal organization and membership features; multi-customer tenant isolation is not a release requirement.
 
 ## Local development
 
@@ -21,18 +23,15 @@ Requirements: Node.js 20+ and a PostgreSQL database.
 5. Start the frontend: `npm run dev`.
 6. Start the API in a second terminal: `cd server && npm run dev`.
 
-The API requires `DATABASE_URL` and a strong `JWT_SECRET`; production must never use the development fallback. Optional integrations require their own credentials.
+The API requires `DATABASE_URL` and a strong `JWT_SECRET`; production must never use a development fallback. Optional integrations require their own credentials.
 
 ## Quality checks
 
 - Frontend production build: `npm run build`
 - Backend TypeScript build: `cd server && npm run build`
-- Backend tests: `cd server && npm test` (currently the test suite expects a configured test database and seeded fixtures)
-
-## Release status
-
-Do not treat the current branch as production-ready until the PostgreSQL migration and workspace query compatibility issues are resolved, public registration privilege escalation is covered by CI, and tenant isolation is tested across every API family. See [DEPLOY.md](DEPLOY.md) for the release gate.
+- Backend tests: `cd server && npm test`
+- CI validates the Prisma schema and workspace platform migration against an isolated PostgreSQL service.
 
 ## Deployment
 
-The repository includes a Vercel configuration for the frontend and API entry point. Configure secrets in the deployment environment; never commit real `.env` files or credentials.
+The repository includes a Vercel configuration for the frontend and API entry point. Configure secrets in the deployment environment; never commit real `.env` files or credentials. See [DEPLOY.md](DEPLOY.md) for production configuration and smoke checks.
