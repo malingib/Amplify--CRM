@@ -305,7 +305,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-[#f3f5f8] font-sans overflow-hidden text-slate-900 relative selection:bg-slate-900 selection:text-white">
+    <div className="flex h-screen bg-[#f5f7fb] font-sans overflow-hidden text-slate-900 relative selection:bg-slate-900 selection:text-white">
       <Sidebar currentView={currentView} onChangeView={setCurrentView} userRole={userRole} systemConfig={systemConfig} />
 
       {/* Mobile Sidebar Overlay */}
@@ -331,7 +331,7 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
-      <main className="flex-1 flex flex-col md:ml-24 transition-all duration-300 h-screen relative z-0 overflow-hidden">
+      <main className="flex-1 flex flex-col md:ml-[280px] transition-all duration-300 h-screen relative z-0 overflow-hidden">
         {/* Header */}
         <header className="h-auto md:h-24 flex items-center justify-between px-4 md:px-8 lg:px-12 shrink-0 pt-3 pb-3 md:pt-4 md:pb-2 relative z-30">
           <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
@@ -487,99 +487,71 @@ const AppContent: React.FC = () => {
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const LoginScreen: React.FC<{ onLogin: (email: string, password: string) => Promise<void>; onGoogleLogin: (credential: string) => Promise<void> }> = ({ onLogin, onGoogleLogin }) => {
-  const [email, setEmail] = useState('admin@amplify.co.ke');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await onLogin(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
+    e.preventDefault(); setLoading(true); setError('');
+    try { await onLogin(email.trim(), password); }
+    catch (err: any) { setError(err.message || 'Unable to sign in. Check your details and try again.'); }
+    finally { setLoading(false); }
   };
-
   const handleGoogleCredential = async (response: { credential: string }) => {
-    setLoading(true);
-    setError('');
-    try {
-      await onGoogleLogin(response.credential);
-    } catch (err: any) {
-      setError(err.message || 'Google sign-in failed');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError('');
+    try { await onGoogleLogin(response.credential); }
+    catch (err: any) { setError(err.message || 'Google sign-in failed'); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
     if (GOOGLE_CLIENT_ID && googleBtnRef.current && window.google?.accounts?.id) {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-      });
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        width: '320',
-      });
-      window.google.accounts.id.cancel();
+      window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+      window.google.accounts.id.renderButton(googleBtnRef.current, { theme: 'outline', size: 'large', text: 'signin_with', width: '340' });
     }
   }, []);
 
   return (
-    <div className="h-screen w-full bg-[#f3f5f8] flex items-center justify-center p-4 sm:p-6">
-      <div className="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm sm:max-w-md text-center border border-slate-200">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-white mx-auto mb-5 sm:mb-6 shadow-lg shadow-slate-900/20">
-          <LogIn className="w-7 h-7 sm:w-8 sm:h-8" />
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h2>
-        <p className="text-slate-500 font-medium mt-2 text-sm">Sign in to access your CRM workspace.</p>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600">{error}</div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-6 sm:mt-8">
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3.5 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-100 transition text-sm"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3.5 sm:p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-100 transition text-sm"
-          />
-          <button type="submit" disabled={loading} className="w-full py-3.5 sm:py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-xl shadow-slate-900/20 active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-
-        {GOOGLE_CLIENT_ID && (
-          <>
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-slate-200" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">or</span>
-              <div className="flex-1 h-px bg-slate-200" />
+    <div className="min-h-screen w-full bg-[#f5f7fb] flex items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-[1120px] min-h-[650px] grid grid-cols-1 lg:grid-cols-[1.02fr_0.98fr] bg-white rounded-[28px] overflow-hidden border border-slate-200 shadow-[0_28px_90px_rgba(15,23,42,0.10)]">
+        <section className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#111c36] p-12 text-white">
+          <div className="absolute inset-0 opacity-20" style={{backgroundImage:'radial-gradient(circle at 20% 20%, #7da6ff 0, transparent 34%), radial-gradient(circle at 90% 80%, #5475d9 0, transparent 35%)'}} />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-[#17264a]"><Command className="w-5 h-5" /></div>
+            <span className="text-lg font-bold tracking-tight">Amplify<span className="text-blue-300">CRM</span></span>
+          </div>
+          <div className="relative z-10 max-w-md">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-blue-100"><Shield className="h-3.5 w-3.5" /> Your business, in sync</div>
+            <h1 className="text-[42px] leading-[1.12] font-semibold tracking-[-0.04em]">A clearer view of every customer relationship.</h1>
+            <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300">Bring your leads, conversations, sales pipeline and customer operations together in one workspace.</p>
+            <div className="mt-10 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><Activity className="h-5 w-5 text-blue-300" /><p className="mt-3 text-sm font-semibold">One connected workspace</p><p className="mt-1 text-xs text-slate-400">Keep teams aligned</p></div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><Shield className="h-5 w-5 text-blue-300" /><p className="mt-3 text-sm font-semibold">Secure access</p><p className="mt-1 text-xs text-slate-400">Role-aware permissions</p></div>
             </div>
-            <div ref={googleBtnRef} className="flex justify-center" />
-          </>
-        )}
-
-        <p className="mt-6 sm:mt-8 text-xs text-slate-400 font-bold">Amplify CRM v2.0 • Enterprise Edition</p>
+          </div>
+          <p className="relative z-10 text-xs text-slate-400">© {new Date().getFullYear()} Amplify CRM. All rights reserved.</p>
+        </section>
+        <section className="flex items-center justify-center px-6 py-12 sm:px-12 lg:px-14">
+          <div className="w-full max-w-[380px]">
+            <div className="mb-10 flex items-center gap-3 lg:hidden">
+              <div className="h-10 w-10 rounded-xl bg-[#17264a] flex items-center justify-center text-white"><Command className="w-5 h-5" /></div>
+              <span className="text-lg font-bold text-slate-900">Amplify<span className="text-blue-600">CRM</span></span>
+            </div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Welcome back</p>
+            <h2 className="mt-3 text-[32px] font-semibold tracking-[-0.04em] text-slate-900">Sign in to Amplify</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Enter your account details to continue to your workspace.</p>
+            {error && <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <div><label htmlFor="amplify-email" className="mb-2 block text-xs font-semibold text-slate-700">Email address</label><input id="amplify-email" type="email" autoComplete="username" required placeholder="you@company.com" value={email} onChange={e=>setEmail(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" /></div>
+              <div><label htmlFor="amplify-password" className="mb-2 block text-xs font-semibold text-slate-700">Password</label><input id="amplify-password" type="password" autoComplete="current-password" required placeholder="Enter your password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" /></div>
+              <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#17264a] px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-[#22365f] disabled:cursor-not-allowed disabled:opacity-60">{loading && <Loader2 className="h-4 w-4 animate-spin" />}{loading ? 'Signing in…' : 'Sign in' }<ArrowRight className="h-4 w-4" /></button>
+            </form>
+            {GOOGLE_CLIENT_ID && <><div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-slate-200"/><span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Or continue with</span><div className="h-px flex-1 bg-slate-200"/></div><div ref={googleBtnRef} className="flex min-h-11 justify-center" /></>}
+            <div className="mt-9 border-t border-slate-100 pt-5 text-center"><p className="text-xs text-slate-400">Protected workspace access · Amplify CRM</p></div>
+          </div>
+        </section>
       </div>
     </div>
   );
