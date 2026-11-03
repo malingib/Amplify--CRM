@@ -557,7 +557,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
   );
 
   return (
-    <div className="p-4 md:p-6 max-w-[1800px] mx-auto space-y-4 pb-24">
+    <div className="amplify-dashboard p-5 md:p-7 max-w-[1800px] mx-auto space-y-5 pb-24">
       {/* Top Navigation / Breadcrumbs */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <div className="flex items-center gap-4 overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
