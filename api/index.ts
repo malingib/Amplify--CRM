@@ -2,7 +2,7 @@ let applicationPromise: Promise<any> | undefined;
 
 export default async function handler(req: any, res: any) {
   try {
-    applicationPromise ??= import('../server/src/index').then((module) => module.default);
+    applicationPromise ??= import('../server/src/index.ts').then((module) => module.default);
     const application = await applicationPromise;
     return application(req, res);
   } catch (error) {
