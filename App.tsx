@@ -31,7 +31,7 @@ declare global {
   }
 }
 import { ViewState, Lead, UserRole, DealStage, SystemConfig, Client, CatalogueItem } from './types';
-import { Bell, Search, Menu, User as UserIcon, Shield, Check, X, Clock, LogIn, ArrowRight, ShoppingBag, Loader2 } from 'lucide-react';
+import { Bell, Search, Menu, User as UserIcon, Shield, Check, X, Clock, LogIn, ArrowRight, ShoppingBag, Loader2, Command, Activity } from 'lucide-react';
 import { useToast } from './components/Toast';
 import { leadsApi, clientsApi, catalogueApi } from './src/api/client';
 import { useWebSocket } from './src/hooks/useWebSocket';
