@@ -16,6 +16,7 @@ import LeadAcquisition from './components/LeadAcquisition';
 import EtimsCompliance from './components/EtimsCompliance';
 import Channels from './components/Channels';
 import { AuthProvider, useAuth } from './components/AuthProvider';
+import AdminBootstrap from './components/AdminBootstrap';
 
 declare global {
   interface Window {
@@ -560,6 +561,7 @@ const LoginScreen: React.FC<{ onLogin: (email: string, password: string) => Prom
 // ─── Main App Wrapper ──────────────────────────────────────
 
 const App: React.FC = () => {
+  if (window.location.pathname === '/setup-admin') return <AdminBootstrap />;
   return (
     <AuthProvider>
       <AppContent />
