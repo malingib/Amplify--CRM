@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import { timingSafeEqual } from 'node:crypto';
 import rateLimit from 'express-rate-limit';
 import prisma from '../lib/prisma';
 import { hashPassword, comparePassword, generateToken } from '../lib/auth';
@@ -24,6 +25,72 @@ const inviteLimiter = rateLimit({
   message: { error: 'Too many invites. Try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+});
+
+
+// POST /api/auth/bootstrap-admin — one-time, allowlisted first administrator setup.
+// Requires a deployment secret and refuses to run once any privileged account exists.
+const bootstrapLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many setup attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/bootstrap-admin', bootstrapLimiter, async (req: AuthRequest, res: Response) => {
+  try {
+    const expectedToken = process.env.ADMIN_BOOTSTRAP_TOKEN || '';
+    const allowedEmail = (process.env.ADMIN_BOOTSTRAP_EMAIL || '').trim().toLowerCase();
+    const suppliedToken = typeof req.body?.token === 'string' ? req.body.token : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+    if (!expectedToken || !allowedEmail) {
+      res.status(404).json({ error: 'Administrator setup is not enabled' });
+      return;
+    }
+    const expected = Buffer.from(expectedToken);
+    const supplied = Buffer.from(suppliedToken);
+    const tokenValid = expected.length === supplied.length && expected.length > 0 && timingSafeEqual(expected, supplied);
+    if (!tokenValid) {
+      res.status(401).json({ error: 'Invalid setup authorization' });
+      return;
+    }
+    if (email !== allowedEmail || !name || name.length < 2 || password.length < 12 || password.length > 128) {
+      res.status(400).json({ error: 'Use the authorized email, a name, and a password of 12–128 characters' });
+      return;
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = await prisma.$transaction(async (tx) => {
+      // Serialize concurrent bootstrap attempts; only the first privileged account can be created.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(734829104)`;
+      const privilegedCount = await tx.user.count({ where: { role: { in: ['ADMIN', 'SYSTEM_OWNER'] } } });
+      if (privilegedCount > 0) throw new Error('ADMIN_BOOTSTRAP_ALREADY_USED');
+      const existing = await tx.user.findUnique({ where: { email } });
+      if (existing) throw new Error('ADMIN_BOOTSTRAP_EMAIL_EXISTS');
+      return tx.user.create({
+        data: { email, name, passwordHash, role: 'ADMIN', status: 'Active' },
+        select: { id: true, email: true, name: true, role: true, avatar: true },
+      });
+    });
+
+    const token = generateToken({ userId: user.id, role: user.role, email: user.email });
+    res.status(201).json({ user, token });
+  } catch (error: any) {
+    if (error?.message === 'ADMIN_BOOTSTRAP_ALREADY_USED') {
+      res.status(409).json({ error: 'Administrator setup has already been completed' });
+      return;
+    }
+    if (error?.message === 'ADMIN_BOOTSTRAP_EMAIL_EXISTS') {
+      res.status(409).json({ error: 'An account already exists for the authorized email; contact support for verified recovery' });
+      return;
+    }
+    console.error('Admin bootstrap error:', error);
+    res.status(500).json({ error: 'Administrator setup failed' });
+  }
 });
 
 // POST /api/auth/register
