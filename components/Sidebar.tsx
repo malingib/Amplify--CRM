@@ -1,115 +1,40 @@
-
 import React from 'react';
-import { LayoutDashboard, Kanban, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote, ShieldCheck, Building2, FileText, PieChart, FileCheck, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Kanban, Settings, LogOut, Sparkles, Command, Users, CheckSquare, ShoppingBag, Banknote, Building2, FileText, PieChart, FileCheck, MessageCircle } from 'lucide-react';
 import { ViewState, UserRole, SystemConfig } from '../types';
 
-interface SidebarProps {
-  currentView: ViewState;
-  onChangeView: (view: ViewState) => void;
-  userRole: UserRole;
-  systemConfig: SystemConfig;
-}
+interface SidebarProps { currentView: ViewState; onChangeView: (view: ViewState) => void; userRole: UserRole; systemConfig: SystemConfig; }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, systemConfig }) => {
-  
-  const allMenuItems = [
-    // Regular User Items
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
-    { id: 'pipeline', label: 'Pipeline', icon: Kanban, roles: ['Admin', 'Manager', 'Sales'] },
-    { id: 'clients', label: 'Clients', icon: Users, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
-    
-    // Conditionally rendered modules
-    { id: 'channels', label: 'Channels', icon: MessageCircle, roles: ['Admin', 'Manager', 'Sales'] },
-    { id: 'financials', label: 'Financials', icon: Banknote, roles: ['Admin', 'Manager'] },
-    { id: 'compliance', label: 'Compliance', icon: FileCheck, roles: ['Admin', 'Manager'], module: 'compliance' },
-    { id: 'catalogue', label: 'Catalogue', icon: ShoppingBag, roles: ['Admin', 'Manager', 'Sales'] },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare, roles: ['Admin', 'Manager', 'Sales', 'Viewer'] },
-    
-    // System Owner Specific Items
-    { id: 'system-overview', label: 'Overview', icon: PieChart, roles: ['SystemOwner'] },
-    { id: 'system-tenants', label: 'Tenants', icon: Building2, roles: ['SystemOwner'] },
-    { id: 'system-financials', label: 'Global Finance', icon: Banknote, roles: ['SystemOwner'] },
-    { id: 'system-approvals', label: 'Approvals', icon: FileText, roles: ['SystemOwner'] },
-
-    // Shared / Settings
-    { id: 'settings', label: 'Settings', icon: Settings, roles: ['Admin', 'SystemOwner'] },
+  const groups = [
+    { title: 'WORKSPACE', items: [
+      { id:'dashboard',label:'Dashboard',icon:LayoutDashboard,roles:['Admin','Manager','Sales','Viewer'] },
+      { id:'pipeline',label:'Sales pipeline',icon:Kanban,roles:['Admin','Manager','Sales'] },
+      { id:'clients',label:'Customers',icon:Users,roles:['Admin','Manager','Sales','Viewer'] },
+      { id:'channels',label:'Conversations',icon:MessageCircle,roles:['Admin','Manager','Sales'] },
+      { id:'tasks',label:'Tasks & follow-ups',icon:CheckSquare,roles:['Admin','Manager','Sales','Viewer'] },
+    ]},
+    { title: 'MANAGEMENT', items: [
+      { id:'financials',label:'Financials',icon:Banknote,roles:['Admin','Manager'] },
+      { id:'compliance',label:'Compliance',icon:FileCheck,roles:['Admin','Manager'],module:'compliance' },
+      { id:'catalogue',label:'Catalogue',icon:ShoppingBag,roles:['Admin','Manager','Sales'] },
+    ]},
+    { title: 'PLATFORM', items: [
+      { id:'system-overview',label:'Overview',icon:PieChart,roles:['SystemOwner'] },
+      { id:'system-tenants',label:'Tenants',icon:Building2,roles:['SystemOwner'] },
+      { id:'system-financials',label:'Global finance',icon:Banknote,roles:['SystemOwner'] },
+      { id:'system-approvals',label:'Approvals',icon:FileText,roles:['SystemOwner'] },
+    ]}
   ];
-
-  const visibleItems = allMenuItems.filter(item => {
-    // Role check
-    if (!item.roles.includes(userRole)) return false;
-    
-    // Module configuration check
-    if (item.module) {
-        // @ts-ignore - Dynamic key access
-        if (!systemConfig.modules[item.module]) return false;
-    }
-    
-    return true;
-  });
-
-  return (
-    <div className="hidden md:flex flex-col fixed left-6 top-6 bottom-6 w-20 bg-slate-900 rounded-3xl items-center py-5 z-50">
-      {/* Logo */}
-      <div 
-        className={`w-10 h-10 rounded-full flex items-center justify-center mb-6 hover:scale-110 transition-transform cursor-pointer shrink-0 ${userRole === 'SystemOwner' ? 'bg-purple-600' : 'bg-white'}`} 
-        onClick={() => onChangeView(userRole === 'SystemOwner' ? 'system-overview' : 'dashboard')}
-      >
-         <Command className={`w-5 h-5 ${userRole === 'SystemOwner' ? 'text-white' : 'text-slate-900'}`} />
-      </div>
-
-      {/* Nav Items */}
-      <nav className="flex-1 flex flex-col space-y-2.5 w-full px-3 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-track]:bg-transparent">
-        {visibleItems.map((item) => {
-          const isActive = currentView === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onChangeView(item.id as ViewState)}
-              className={`group relative w-full aspect-square flex items-center justify-center rounded-full transition-all duration-300 ${
-                isActive 
-                  ? 'bg-white text-slate-900 shadow-lg' 
-                  : 'text-slate-500 hover:bg-white/10 hover:text-white'
-              }`}
-              title={item.label}
-            >
-              <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-              
-              {/* Tooltip dot for inactive */}
-              {!isActive && (
-                <span className={`absolute right-2 top-2 w-1.5 h-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${userRole === 'SystemOwner' ? 'bg-purple-400' : 'bg-emerald-400'}`} />
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Bottom Actions */}
-      <div className="flex flex-col gap-3 px-3 w-full pt-2">
-        {['Admin', 'Manager', 'Sales'].includes(userRole) && systemConfig.modules.leadAcquisition && (
-          <button 
-            onClick={() => onChangeView('lead-acquisition')}
-            className={`w-full aspect-square flex items-center justify-center rounded-full transition-all duration-300 ${
-                currentView === 'lead-acquisition' 
-                ? 'bg-white text-slate-900 shadow-lg' 
-                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white'
-            }`}
-            title="AI Lead Acquisition"
-          >
-              <Sparkles className="w-5 h-5" />
-          </button>
-        )}
-        <button 
-            onClick={() => window.location.reload()} // Simulate Logout/Reset
-            className="w-full aspect-square flex items-center justify-center rounded-full text-slate-500 hover:text-red-400 hover:bg-white/10 transition-colors"
-            title="Log Out"
-        >
-          <LogOut className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
+  return <aside className="hidden md:flex fixed left-5 top-5 bottom-5 z-50 w-[248px] flex-col rounded-[22px] border border-slate-200 bg-white px-4 py-5 shadow-[0_8px_35px_rgba(15,23,42,0.05)]">
+    <button onClick={()=>onChangeView(userRole==='SystemOwner'?'system-overview':'dashboard')} className="mb-9 flex items-center gap-3 px-2 text-left">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#17264a] text-white"><Command className="h-5 w-5"/></span>
+      <span><span className="block text-[16px] font-bold tracking-tight text-slate-900">Amplify<span className="text-blue-600">CRM</span></span><span className="mt-0.5 block text-[10px] font-medium text-slate-400">CUSTOMER OPERATIONS</span></span>
+    </button>
+    <nav className="flex-1 space-y-7 overflow-y-auto">
+      {groups.map(group=>{const items=group.items.filter(item=>item.roles.includes(userRole)&&(!item.module||systemConfig.modules[item.module as keyof typeof systemConfig.modules]));if(!items.length)return null;return <div key={group.title}><p className="mb-2 px-3 text-[9px] font-bold tracking-[0.16em] text-slate-400">{group.title}</p><div className="space-y-1">{items.map(item=>{const Icon=item.icon;const active=currentView===item.id;return <button key={item.id} onClick={()=>onChangeView(item.id as ViewState)} className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold transition ${active?'bg-blue-50 text-blue-700':'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}><Icon className={`h-[17px] w-[17px] ${active?'text-blue-600':'text-slate-400 group-hover:text-slate-600'}`}/>{item.label}{active&&<span className="ml-auto h-1.5 w-1.5 rounded-full bg-blue-600"/>}</button>})}</div></div>})}
+    </nav>
+    {['Admin','Manager','Sales'].includes(userRole)&&systemConfig.modules.leadAcquisition&&<button onClick={()=>onChangeView('lead-acquisition')} className={`mb-3 flex items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-semibold ${currentView==='lead-acquisition'?'bg-blue-50 text-blue-700':'bg-slate-50 text-slate-700 hover:bg-blue-50'}`}><Sparkles className="h-4 w-4 text-blue-600"/>AI lead acquisition</button>}
+    <div className="border-t border-slate-100 pt-3">{['Admin','SystemOwner'].includes(userRole)&&<button onClick={()=>onChangeView('settings')} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"><Settings className="h-4 w-4 text-slate-400"/>Settings</button>}<p className="px-3 pt-3 text-[10px] text-slate-400">{userRole==='SystemOwner'?'Platform owner':'Workspace'} access</p></div>
+  </aside>;
 };
-
 export default Sidebar;

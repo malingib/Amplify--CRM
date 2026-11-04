@@ -25,3 +25,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* NexLink-inspired CRM workspace refinement */
+body { background:#f5f7fb; color:#172033; }
+.amplify-dashboard { color:#172033; }
+.amplify-dashboard > div { min-width:0; }
+.amplify-dashboard .rounded-2xl, .amplify-dashboard .rounded-3xl { border-radius:16px; }
+.amplify-dashboard .shadow-xl, .amplify-dashboard .shadow-2xl { box-shadow:0 8px 28px rgba(15,23,42,.06); }
+.amplify-dashboard .border-slate-200 { border-color:#e7ebf2; }
+.amplify-dashboard button { transition-duration:180ms; }
+@media (max-width:767px) { .amplify-dashboard { padding:16px 14px 80px; } }

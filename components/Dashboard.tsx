@@ -74,21 +74,12 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
   }));
 
   const totalRevenue = stats?.revenue.total || 0;
-  const revenueData = [
-    { name: 'Jan', revenue: Math.round(totalRevenue * 0.08), target: Math.round(totalRevenue * 0.1), expense: Math.round(totalRevenue * 0.04) },
-    { name: 'Feb', revenue: Math.round(totalRevenue * 0.1), target: Math.round(totalRevenue * 0.12), expense: Math.round(totalRevenue * 0.05) },
-    { name: 'Mar', revenue: Math.round(totalRevenue * 0.12), target: Math.round(totalRevenue * 0.14), expense: Math.round(totalRevenue * 0.06) },
-    { name: 'Apr', revenue: Math.round(totalRevenue * 0.14), target: Math.round(totalRevenue * 0.13), expense: Math.round(totalRevenue * 0.05) },
-    { name: 'May', revenue: Math.round(totalRevenue * 0.16), target: Math.round(totalRevenue * 0.15), expense: Math.round(totalRevenue * 0.07) },
-    { name: 'Jun', revenue: Math.round(totalRevenue * 0.18), target: Math.round(totalRevenue * 0.17), expense: Math.round(totalRevenue * 0.06) },
-  ];
+  // The current stats endpoint exposes aggregate totals, not dated ledger entries.
+  // Keep time-series charts empty until the API provides genuine period-level data.
+  const revenueData: { name: string; revenue: number; target: number; expense: number }[] = [];
 
-  const leadSourceData = [
-    { name: 'Referral', value: Math.round((stats?.leads.total || 0) * 0.35) },
-    { name: 'LinkedIn', value: Math.round((stats?.leads.total || 0) * 0.25) },
-    { name: 'Cold Email', value: Math.round((stats?.leads.total || 0) * 0.25) },
-    { name: 'Website', value: Math.round((stats?.leads.total || 0) * 0.15) },
-  ];
+  // Source attribution is not included in the dashboard stats response.
+  const leadSourceData: { name: string; value: number }[] = [];
 
   // RBAC for Widgets
   const canSeeFinancials = ['Admin', 'Manager', 'SystemOwner'].includes(userRole);
@@ -157,84 +148,19 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 {/* The Colored Cards Row */}
                 {showOverview && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* Hero Card — Safaricom Deal */}
-                        {!isViewer ? (
-                            <div 
-                                onClick={() => handleNav('pipeline')}
-                                className="bg-slate-900 rounded-2xl p-4 md:p-5 text-white relative overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer min-h-[140px] md:min-h-[160px] flex flex-col justify-between border border-slate-800"
-                            >
-                                <div className="flex justify-between items-start relative z-10">
-                                    <div className="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded text-white">Safaricom PLC</div>
+                        {pipelineStageData.length > 0 ? pipelineStageData.slice(0, 3).map((stage, index) => (
+                            <button key={stage.name} onClick={() => handleNav('pipeline')} className={`rounded-2xl p-4 md:p-5 text-left min-h-[140px] md:min-h-[160px] flex flex-col justify-between transition hover:shadow-md ${index === 0 ? 'bg-slate-900 text-white' : 'bg-white text-slate-900 border border-slate-200'}`}>
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${index === 0 ? 'text-slate-300' : 'text-slate-500'}`}>{stage.name}</span>
+                                <div>
+                                    <p className="text-2xl md:text-3xl font-bold tracking-tight">{stage.count} <span className="text-sm font-medium">leads</span></p>
+                                    <p className={`mt-1 text-xs ${index === 0 ? 'text-slate-300' : 'text-slate-500'}`}>KES {stage.value.toLocaleString('en-KE')} pipeline value</p>
                                 </div>
-                                <div className="space-y-0.5 relative z-10 mt-auto">
-                                    <p className="text-base md:text-lg font-bold tracking-tight leading-tight">Enterprise Upgrade</p>
-                                    <span className="text-2xl md:text-3xl font-bold tracking-tighter">$11.2k</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center text-center min-h-[140px] md:min-h-[160px]">
-                                <Eye className="w-6 h-6 text-slate-300 mb-2" />
-                                <h4 className="font-bold text-slate-900 text-xs">Viewer Mode</h4>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Read-only. Deals hidden.</p>
-                            </div>
-                        )}
-
-                        {/* Secondary Card — Mombasa Marine */}
-                        {!isViewer ? (
-                            <div 
-                                onClick={() => handleNav('pipeline')}
-                                className="rounded-2xl p-4 md:p-5 text-slate-900 relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer min-h-[140px] md:min-h-[160px] flex flex-col justify-between"
-                            >
-                                <div className="flex justify-between items-start relative z-10">
-                                    <div className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">Mombasa Marine</div>
-                                </div>
-                                <div className="space-y-0.5 relative z-10 mt-auto">
-                                    <p className="text-base md:text-lg font-bold tracking-tight text-slate-900 leading-tight">Logistics Hub</p>
-                                    <span className="text-2xl md:text-3xl font-bold tracking-tighter text-slate-900">$4.1k</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-4 md:p-5 rounded-2xl flex flex-col min-h-[140px] md:min-h-[160px]">
-                                 <div className="flex items-center gap-2 mb-3">
-                                     <Clock className="w-4 h-4 text-blue-500" />
-                                     <h4 className="font-bold text-slate-900 text-xs">Recent Updates</h4>
-                                 </div>
-                                 <div className="space-y-2">
-                                     <div className="flex items-center gap-2">
-                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                         <p className="text-[11px] font-medium text-slate-600">Invoice #INV-001 generated</p>
-                                     </div>
-                                     <div className="flex items-center gap-2">
-                                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                                         <p className="text-[11px] font-medium text-slate-600">New Client added</p>
-                                     </div>
-                                     <div className="flex items-center gap-2">
-                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                                         <p className="text-[11px] font-medium text-slate-600">Maintenance Scheduled</p>
-                                     </div>
-                                 </div>
-                            </div>
-                        )}
-
-                        {/* Deal Detail Card */}
-                        {['Admin', 'Manager', 'Sales'].includes(userRole) ? (
-                            <div 
-                                onClick={() => handleNav('pipeline')}
-                                className="rounded-2xl p-4 md:p-5 text-slate-900 relative overflow-hidden group hover:shadow-md transition-all duration-300 cursor-pointer min-h-[140px] md:min-h-[160px] flex flex-col justify-between"
-                            >
-                                <div className="flex justify-between items-start relative z-10">
-                                    <div className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">Absolute Systems</div>
-                                </div>
-                                <div className="mt-auto space-y-0.5 relative z-10">
-                                    <p className="text-base md:text-lg font-bold tracking-tight text-slate-900 leading-tight">SaaS Contract</p>
-                                    <span className="text-2xl md:text-3xl font-bold tracking-tighter text-slate-900">$2.1k</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center text-center min-h-[140px] md:min-h-[160px]">
-                                <Lock className="w-6 h-6 text-slate-300 mb-2" />
-                                <h4 className="font-bold text-slate-900 text-xs">Access Restricted</h4>
-                                <p className="text-[10px] text-slate-500 mt-0.5">Limited to sales team.</p>
+                            </button>
+                        )) : (
+                            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+                                <Briefcase className="mx-auto mb-2 h-6 w-6 text-slate-400" />
+                                <p className="text-sm font-semibold text-slate-700">No pipeline records yet</p>
+                                <p className="mt-1 text-xs text-slate-500">Add leads to see live pipeline summaries here.</p>
                             </div>
                         )}
                     </div>
@@ -272,43 +198,16 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                             </div>
                         </div>
 
-                        {/* Tasks Schedule (Mini) */}
-                        <div 
-                            onClick={() => handleNav('tasks')}
-                            className="md:col-span-4 rounded-2xl p-4 md:p-6 min-h-[200px] md:min-h-[320px] flex flex-col cursor-pointer group transition-colors"
-                        >
-                            <div className="flex justify-between items-center mb-4">
-                                <h4 className="font-bold text-slate-900 text-base tracking-tight">Today's Tasks</h4>
+                        <div onClick={() => handleNav('tasks')} className="md:col-span-4 rounded-2xl border border-slate-200 bg-white p-4 md:p-6 min-h-[200px] md:min-h-[320px] flex flex-col cursor-pointer">
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="font-bold text-slate-900 text-base">Task overview</h4>
                                 <Calendar className="w-4 h-4 text-slate-400" />
                             </div>
-                            
-                            <div className="space-y-2">
-                                <div className="p-3 rounded-xl flex items-start gap-3">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900">Prepare Q3 Report</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Due: 2:00 PM</p>
-                                    </div>
-                                </div>
-                                <div className="p-3 rounded-xl flex items-start gap-3">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900">Call Alice Kamau</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Due: 4:30 PM</p>
-                                    </div>
-                                </div>
-                                <div className="p-3 rounded-xl flex items-start gap-3 opacity-60">
-                                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 line-through">Team Sync</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Completed</p>
-                                    </div>
-                                </div>
+                            <div className="space-y-4">
+                                <div><p className="text-2xl font-bold text-slate-900">{stats?.tasks.pending ?? 0}</p><p className="text-xs text-slate-500">Pending tasks</p></div>
+                                <div><p className="text-2xl font-bold text-slate-900">{stats?.tasks.completed ?? 0}</p><p className="text-xs text-slate-500">Completed tasks</p></div>
                             </div>
-
-                            <button onClick={(e) => { e.stopPropagation(); handleNav('tasks'); }} className="mt-auto w-full py-2.5 text-slate-900 font-bold rounded-xl hover:bg-slate-100 text-xs transition flex items-center justify-center gap-2 group/btn">
-                                View Calendar <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
+                            <p className="mt-auto text-xs font-semibold text-blue-600">Open task manager <ArrowRight className="inline h-3 w-3" /></p>
                         </div>
                     </div>
                 ) : (
@@ -336,9 +235,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                              <TrendingUp className="w-14 h-14" />
                          </div>
                          <p className="text-[10px] font-bold text-emerald-100 uppercase tracking-widest mb-1">Total Revenue</p>
-                         <h3 className="text-xl md:text-2xl font-bold mb-2">KES 12.5M</h3>
+                         <h3 className="text-xl md:text-2xl font-bold mb-2">KES {totalRevenue.toLocaleString('en-KE')}</h3>
                          <div className="flex gap-2">
-                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold">+18% vs Last Month</span>
+                             <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold">All-time recorded revenue</span>
                          </div>
                     </div>
                     
@@ -347,11 +246,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                              <CreditCard className="w-4 h-4 text-slate-400" />
                          </div>
                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pending Invoices</p>
-                         <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">KES 850k</h3>
+                         <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">{stats?.invoices.pending ?? 0}</h3>
                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                              <div className="bg-amber-500 h-full w-[45%]"></div>
                          </div>
-                         <p className="text-[10px] text-slate-400 mt-1.5 font-bold">12 Invoices Outstanding</p>
+                         <p className="text-[10px] text-slate-400 mt-1.5 font-bold">Pending invoices</p>
                     </div>
 
                     <div className="rounded-2xl p-4 md:p-5 relative">
@@ -359,11 +258,11 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                              <Target className="w-4 h-4 text-slate-400" />
                          </div>
                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Quarterly Goal</p>
-                         <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">82%</h3>
+                         <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">Not configured</h3>
                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                             <div className="bg-blue-600 h-full w-[82%]"></div>
+                             <div className="bg-blue-600 h-full w-0"></div>
                          </div>
-                         <p className="text-[10px] text-slate-400 mt-1.5 font-bold">KES 2.1M remaining to target</p>
+                         <p className="text-[10px] text-slate-400 mt-1.5 font-bold">No target configured</p>
                     </div>
                 </div>
 
@@ -506,9 +405,8 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                             <Legend verticalAlign="bottom" height={36} iconType="circle" />
                         </PieChart>
                     </ResponsiveContainer>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-8 text-center">
-                        <p className="text-2xl font-bold text-slate-900">1,200</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Total Leads</p>
+                    <div className="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
+                        <p className="text-xs font-medium text-slate-400">Source attribution unavailable</p>
                     </div>
                  </div>
              </div>
@@ -557,7 +455,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
   );
 
   return (
-    <div className="p-4 md:p-6 max-w-[1800px] mx-auto space-y-4 pb-24">
+    <div className="amplify-dashboard p-5 md:p-7 max-w-[1800px] mx-auto space-y-5 pb-24">
       {/* Top Navigation / Breadcrumbs */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <div className="flex items-center gap-4 overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
@@ -630,7 +528,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Total Revenue</p>
-                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">$1.98M</p>
+                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">KES {totalRevenue.toLocaleString('en-KE')}</p>
                 </div>
                 <div className="h-6 w-12 shrink-0">
                      <ResponsiveContainer width="100%" height="100%">
@@ -650,7 +548,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">My Pipeline</p>
-                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">$245k</p>
+                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">{stats?.leads.total ?? 0}</p>
                 </div>
             </div>
          ) : (
@@ -660,7 +558,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Assigned Tasks</p>
-                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">8</p>
+                    <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">{stats?.tasks.pending ?? 0}</p>
                 </div>
             </div>
          )}
@@ -674,9 +572,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">New Customers</p>
-                <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">+89</p>
+                <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">{stats?.clients.total ?? 0}</p>
             </div>
-            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-100 shrink-0">+12%</span>
+            
          </div>
 
          <div 
@@ -688,7 +586,7 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Pending Tasks</p>
-                <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">12</p>
+                <p className="text-lg font-bold text-slate-900 tracking-tight leading-none">{stats?.tasks.pending ?? 0}</p>
             </div>
          </div>
           
@@ -700,9 +598,9 @@ const Dashboard: React.FC<DashboardProps> = ({ userRole, onNavigate, systemConfi
                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Q4 Goal</p>
                  <div className="flex items-center gap-2">
                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                         <div className="h-full bg-slate-900 rounded-full" style={{ width: '75%' }}></div>
+                         <div className="h-full bg-slate-900 rounded-full" style={{ width: '0%' }}></div>
                      </div>
-                     <span className="text-[11px] font-bold text-slate-900">75%</span>
+                     <span className="text-[11px] font-bold text-slate-900">—</span>
                  </div>
              </div>
          </div>
